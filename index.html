@@ -2,160 +2,184 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>APP Sensitivity</title>
-    <!-- Thư viện icon FontAwesome -->
-    <link rel="stylesheet" href="https://cloudflare.com">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AOP ĐỘ NHẠY - THIẾT BỊ ĐỘC QUYỀN</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- HIỆU ỨNG MỞ APP (LOADING SCREEN) -->
-    <div id="app-loading">
-        <div class="splash-content">
-            <div class="app-logo">
-                <i class="fa-solid fa-crosshairs"></i>
-            </div>
-            <h2>APP Sensitivity</h2>
+    <!-- 1. MÀN HÌNH KHÓA NHẬP KEY -->
+    <div id="loginContainer" class="menu-container anim-fade-up">
+        <div class="header">
+            <h2>KÍCH HOẠT HỆ THỐNG</h2>
+            <p>VUI LÒNG NHẬP KEY ĐỂ TIẾP TỤC</p>
+        </div>
+
+        <div class="section-title">Mã Key Bản Quyền</div>
+        <div class="input-wrapper">
+            <input type="text" id="keyInput" placeholder="Nhập mã key tại đây..." autocomplete="off">
+        </div>
+
+        <div class="key-note">
+            <p>💡 <b>Gợi ý Test thử các Key:</b></p>
+            <ul>
+                <li>Gói 1 Ngày: <code class="test-key">KEY-1DAY-TEST</code></li>
+                <li>Gói 7 Ngày: <code class="test-key">KEY-7DAY-TEST</code></li>
+                <li>Gói 30 Ngày: <code class="test-key">KEY-30DAY-TEST</code></li>
+                <li>Vĩnh Viễn: <code class="test-key">KEY-FOREVER-PRO</code></li>
+            </ul>
+        </div>
+
+        <button id="loginBtn" class="apply-btn">Xác Thực Mã Key</button>
+    </div>
+
+
+    <!-- 2. GIAO DIỆN CHÍNH (ĐỘ NHẠY TỰ ĐỘNG THEO MÁY) -->
+    <div id="appContainer" class="menu-container hidden">
+        <div class="header">
+            <h2>AOP ĐỘ NHẠY</h2>
             <p>NÂNG CẤP • TỐI ƯU • CHIẾN THẮNG</p>
-            <div class="loading-bar-container">
-                <div class="loading-bar-fill"></div>
-            </div>
-            <button id="skip-loading-btn" class="skip-btn">Vào thẳng Menu</button>
-        </div>
-    </div>
-
-    <!-- GIAO DIỆN CHÍNH (MAIN APP) -->
-    <div class="app-container">
-        
-        <!-- STATUS BAR PHÍA TRÊN -->
-        <header class="status-bar">
-            <span class="time">01:03</span>
-            <div class="island-notch"><i class="fa-solid fa-phone"></i> 1g</div>
-            <div class="battery-status">56% <i class="fa-solid fa-battery-half"></i></div>
-        </header>
-
-        <!-- TIÊU ĐỀ MENU -->
-        <div class="menu-title">
-            <div>
-                <h1>APP Sensitivity</h1>
-                <p class="subtitle">NÂNG CẤP • TỐI ƯU • CHIẾN THẮNG</p>
-            </div>
-            <button class="pro-btn"><i class="fa-solid fa-crown"></i> PRO</button>
+            <span class="badge-pro">PRO</span>
         </div>
 
-        <!-- KHU VỰC CÀI ĐẶT CHÍNH (CUỘN NỘI BỘ CHỐNG TRÀN) -->
-        <main class="content-scroll">
+        <!-- Trạng thái Key -->
+        <div class="status-bar">
+            <span>Trạng thái: <b id="keyStatus" style="color: #00f0ff;">Đã kích hoạt</b></span>
+        </div>
+
+        <!-- CHỌN NỀN TẢNG -->
+        <div class="section-title">Chọn Nền Tảng</div>
+        <div class="flex-box">
+            <button class="btn-platform active">iOS</button>
+            <button class="btn-platform">Android</button>
+        </div>
+
+        <!-- THIẾT BỊ IPHONE -->
+        <div class="section-title">Thiết Bị iPhone</div>
+        <div class="select-wrapper">
+            <select id="deviceSelect" class="custom-select">
+                <option value="iPhone 17 Pro Max">iPhone 17 Pro Max</option>
+                <option value="iPhone 17 Pro">iPhone 17 Pro</option>
+                <option value="iPhone 16 Pro Max">iPhone 16 Pro Max</option>
+                <option value="iPhone 16 Pro">iPhone 16 Pro</option>
+                <option value="iPhone 15 Pro Max">iPhone 15 Pro Max</option>
+                <option value="iPhone 15 Pro">iPhone 15 Pro</option>
+                <option value="iPhone 14 Pro Max">iPhone 14 Pro Max</option>
+                <option value="iPhone 13 Pro Max">iPhone 13 Pro Max</option>
+                <option value="iPhone 13 Pro" selected>iPhone 13 Pro</option>
+                <option value="iPhone 12 Pro Max">iPhone 12 Pro Max</option>
+                <option value="iPhone 11 Pro Max">iPhone 11 Pro Max</option>
+                <option value="iPhone XS Max">iPhone XS Max</option>
+                <option value="iPhone 8 Plus">iPhone 8 Plus</option>
+                <option value="iPhone 7 Plus">iPhone 7 Plus</option>
+            </select>
+        </div>
+
+        <!-- THỜI GIAN GÓI KEY -->
+        <div class="section-title">Thông Tin Gói Của Bạn</div>
+        <div class="grid-options">
+            <button class="btn-key" id="tag1Day" disabled>Gói 1 Ngày</button>
+            <button class="btn-key" id="tag7Day" disabled>Gói 7 Ngày</button>
+            <button class="btn-key" id="tag30Day" disabled>Gói 30 Ngày</button>
+            <button class="btn-key" id="tagForever" disabled>Vĩnh Viễn</button>
+        </div>
+
+        <!-- ================= KHU VỰC THANH KÉO ĐỘ NHẠY ================= -->
+        <div class="section-title">Điều Chỉnh Độ Nhạy (Auto Config)</div>
+        <div class="sliders-list">
             
-            <!-- CHỌN NỀN TẢNG & GAME -->
-            <div class="row-flex">
-                <div class="section flex-1">
-                    <h3>CHỌN NỀN TẢNG</h3>
-                    <div class="grid-2">
-                        <button class="btn active" id="platform-ios"><i class="fa-brands fa-apple"></i> iOS</button>
-                        <button class="btn" id="platform-android"><i class="fa-brands fa-android"></i> Android</button>
-                    </div>
+            <!-- Slider 1 -->
+            <div class="slider-group" data-type="xungQuanh">
+                <div class="slider-info">
+                    <span class="slider-name">Nhìn Xung Quanh</span>
+                    <span class="slider-sub">Quay camera</span>
                 </div>
-                <div class="section flex-1">
-                    <h3>CHỌN GAME</h3>
-                    <div class="grid-4">
-                        <button class="btn active"><i class="fa-solid fa-fire"></i><span class="text-mini">FF</span></button>
-                        <button class="btn"><i class="fa-solid fa-gem"></i><span class="text-mini">MAX</span></button>
-                        <button class="btn"><i class="fa-solid fa-v"></i><span class="text-mini">VN</span></button>
-                        <button class="btn"><i class="fa-solid fa-border-all"></i><span class="text-mini">Khác</span></button>
-                    </div>
+                <div class="slider-control">
+                    <input type="range" class="range-input" min="0" max="100">
+                    <span class="val-display">0</span>
+                    <button class="btn-step min-btn">-</button>
+                    <button class="btn-step plus-btn">+</button>
                 </div>
             </div>
 
-          <!-- THIẾT BỊ & THỜI GIAN -->
-<div class="row-flex">
-    <div class="section flex-1">
-        <h3>THIẾT BỊ</h3>
-        <div class="select-box">
-            <!-- Thẻ select tự động được tạo và chèn vào đây từ JS mà không cần viết tay -->
+            <!-- Slider 2 -->
+            <div class="slider-group" data-type="redDot">
+                <div class="slider-info">
+                    <span class="slider-name">Red Dot / Ống Ngắm</span>
+                    <span class="slider-sub">Ngắm tâm chuẩn</span>
+                </div>
+                <div class="slider-control">
+                    <input type="range" class="range-input" min="0" max="100">
+                    <span class="val-display">0</span>
+                    <button class="btn-step min-btn">-</button>
+                    <button class="btn-step plus-btn">+</button>
+                </div>
+            </div>
+
+            <!-- Slider 3 -->
+            <div class="slider-group" data-type="zoom2x">
+                <div class="slider-info">
+                    <span class="slider-name">Ống Ngắm 2x</span>
+                    <span class="slider-sub">Zoom 2x</span>
+                </div>
+                <div class="slider-control">
+                    <input type="range" class="range-input" min="0" max="100">
+                    <span class="val-display">0</span>
+                    <button class="btn-step min-btn">-</button>
+                    <button class="btn-step plus-btn">+</button>
+                </div>
+            </div>
+
+            <!-- Slider 4 -->
+            <div class="slider-group" data-type="zoom4x">
+                <div class="slider-info">
+                    <span class="slider-name">Ống Ngắm 4x</span>
+                    <span class="slider-sub">Zoom 4x</span>
+                </div>
+                <div class="slider-control">
+                    <input type="range" class="range-input" min="0" max="100">
+                    <span class="val-display">0</span>
+                    <button class="btn-step min-btn">-</button>
+                    <button class="btn-step plus-btn">+</button>
+                </div>
+            </div>
+
+            <!-- Slider 5 -->
+            <div class="slider-group" data-type="awm">
+                <div class="slider-info">
+                    <span class="slider-name">Ống Ngắm AWM</span>
+                    <span class="slider-sub">Sniper tối ưu</span>
+                </div>
+                <div class="slider-control">
+                    <input type="range" class="range-input" min="0" max="100">
+                    <span class="val-display">0</span>
+                    <button class="btn-step min-btn">-</button>
+                    <button class="btn-step plus-btn">+</button>
+                </div>
+            </div>
+
+            <!-- Slider 6 -->
+            <div class="slider-group" data-type="tuDo">
+                <div class="slider-info">
+                    <span class="slider-name">Nhìn Tự Do</span>
+                    <span class="slider-sub">Quan sát tự do</span>
+                </div>
+                <div class="slider-control">
+                    <input type="range" class="range-input" min="0" max="100">
+                    <span class="val-display">0</span>
+                    <button class="btn-step min-btn">-</button>
+                    <button class="btn-step plus-btn">+</button>
+                </div>
+            </div>
+
         </div>
-    </div>
-    <div class="section flex-1 text-right-vip">
-        <span class="vip-tag"><i class="fa-solid fa-clock"></i>VĨNH VIỄN<span class="badge">VIP</span></span>
-    </div>
-</div>
+        <!-- ============================================================= -->
 
-            <!-- CHỌN PRESET ĐỘ NHẠY -->
-            <div class="section">
-                <div class="section-header">
-                    <h3>CHỌN PRESET ĐỘ NHẠY <span class="new-tag">MỚI</span></h3>
-                    <a href="#" class="link-action">QUẢN LÝ PRESET</a>
-                </div>
-                <div class="grid-5">
-                    <button class="preset-btn" data-preset="coban">Cơ Bản<br><span>Ổn định</span></button>
-                    <button class="preset-btn active" data-preset="nangcao">Nâng Cao<br><span>Cân bằng</span></button>
-                    <button class="preset-btn" data-preset="chuyennghiep">Chuyên Nghiệp<br><span>Headshot</span></button>
-                    <button class="preset-btn" data-preset="youtuber">Youtuber<br><span>Pro player</span></button>
-                    <button class="preset-btn" data-preset="tuychinh">Tùy Chỉnh<br><span>Tự chỉnh</span></button>
-                </div>
-            </div>
-
-            <!-- ĐIỀU CHỈNH ĐỘ NHẠY (SLIDERS) -->
-            <div class="section">
-                <div class="section-header">
-                    <h3>ĐIỀU CHỈNH ĐỘ NHẠY <i class="fa-regular fa-circle-question"></i></h3>
-                    <button class="reset-btn-text" id="btn-reset-sliders">ĐẶT LẠI</button>
-                </div>
-                
-                <!-- Khu vực tự động render danh sách thanh trượt nhạy theo máy từ JS -->
-                <div class="slider-group-container"></div>
-            </div>
-
-            <!-- CÔNG CỤ TỐI ƯU -->
-            <div class="section">
-                <h3>CÔNG CỤ TỐI ƯU</h3>
-                <div class="grid-4">
-                    <div class="tool-card"><i class="fa-solid fa-hand-pointer"></i> Tối Ưu Touch<br><span>Tăng nhạy</span></div>
-                    <div class="tool-card"><i class="fa-solid fa-bolt"></i> Giảm Giật Lag<br><span>Mượt FPS</span></div>
-                    <div class="tool-card"><i class="fa-solid fa-crosshairs"></i> Tăng Chính Xác<br><span>Dễ trúng</span></div>
-                    <div class="tool-card"><i class="fa-solid fa-battery-three-quarters"></i> Tối Ưu Pin<br><span>Tiết kiệm</span></div>
-                </div>
-            </div>
-
-            <!-- THỐNG KÊ & XEM TRƯỚC -->
-            <div class="grid-2 row-flex">
-                <div class="section flex-1">
-                    <h3>THỐNG KÊ</h3>
-                    <div class="stats-grid">
-                        <div class="stat-item"><span class="green-text">87% ↑</span><br>Headshot</div>
-                        <div class="stat-item"><span>1.25x ↑</span><br>Phản xạ</div>
-                        <div class="stat-item"><span class="green-text">32% ↑</span><br>Độ mượt</div>
-                        <div class="stat-item"><span>99%</span><br>Ổn định</div>
-                    </div>
-                </div>
-                <div class="section flex-1">
-                    <h3>HỖ TRỢ ĐỘ NHẠY CHO GAME</h3>
-                    <div class="preview-box">
-                        <img src="https://i.ibb.co/rGBMyc0p/hinh-nen-anime-nam.jpg[/img]" alt="Preview Game">
-                        <div class="crosshair-overlay">+</div>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-
-        <!-- CHÂN TRANG CỐ ĐỊNH CHỐNG TRÀN -->
-        <footer class="app-footer">
-            <div class="action-footer-buttons">
-                <button class="btn-apply-main"><i class="fa-solid fa-wand-magic-sparkles"></i> ÁP DỤNG ĐỘ NHẠY</button>
-                <button class="btn-save-preset"><i class="fa-solid fa-floppy-disk"></i> LƯU PRESET</button>
-            </div>
-
-            <!-- THANH ĐIỀU HƯỚNG BOTTOM NAV -->
-            <nav class="bottom-nav">
-                <a href="#" class="nav-item active"><i class="fa-solid fa-house"></i><span>Trang Chủ</span></a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-chart-simple"></i><span>Phân Tích</span></a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-users"></i><span>Cộng Đồng</span></a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-book"></i><span>Hướng Dẫn</span></a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-gear"></i><span>Cài Đặt</span></a>
-            </nav>
-        </footer>
-
+        <!-- HÀM THỰC THI -->
+        <div class="action-box">
+            <button id="applyBtn" class="apply-btn">Áp Dụng Độ Nhạy</button>
+            <button id="saveBtn" class="save-btn">Lưu Preset</button>
+        </div>
     </div>
 
     <script src="script.js"></script>

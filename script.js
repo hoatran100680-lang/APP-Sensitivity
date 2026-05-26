@@ -1,223 +1,170 @@
-/**
- * CƠ SỞ DỮ LIỆU ĐỘ NHẠY CHUẨN HEADSHOT (IPHONE 6 -> IPHONE 17)
- * Cấu hình được tối ưu hóa dựa trên DPI, tần số quét màn hình và chip của từng đời máy.
- */
-const PHONE_DATABASE = {
-    // THẾ HỆ IPHONE 17 SERIES
-    "iphone-17-pro-max": [100, 94, 88, 78, 62, 90],
-    "iphone-17-pro":     [98,  92, 86, 75, 60, 88],
-    "iphone-17-plus":    [96,  90, 84, 74, 58, 85],
-    "iphone-17":         [95,  88, 82, 72, 55, 85],
-
-    // THẾ HỆ IPHONE 16 SERIES
-    "iphone-16-pro-max": [100, 92, 85, 75, 65, 90],
-    "iphone-16-pro":     [99,  90, 84, 74, 62, 88],
-    "iphone-16-plus":    [95,  88, 82, 72, 60, 85],
-    "iphone-16":         [94,  86, 80, 70, 58, 80],
-
-    // THẾ HỆ IPHONE 15 SERIES
-    "iphone-15-pro-max": [98,  92, 85, 75, 65, 90],
-    "iphone-15-pro":     [96,  90, 82, 74, 62, 88],
-    "iphone-15-plus":    [94,  88, 80, 72, 60, 85],
-    "iphone-15":         [92,  85, 78, 70, 55, 80],
-
-    // THẾ HỆ IPHONE 14 SERIES
-    "iphone-14-pro-max": [96,  90, 84, 74, 62, 85],
-    "iphone-14-pro":     [95,  88, 82, 72, 60, 85],
-    "iphone-14-plus":    [92,  86, 80, 70, 58, 80],
-    "iphone-14":         [90,  84, 78, 68, 55, 75],
-
-    // THẾ HỆ IPHONE 13 SERIES
-    "iphone-13-pro-max": [95,  88, 82, 72, 60, 85],
-    "iphone-13-pro":     [94,  85, 80, 70, 58, 80],
-    "iphone-13":         [90,  82, 76, 68, 55, 75],
-    "iphone-13-mini":    [88,  80, 74, 65, 52, 70],
-
-    // THẾ HỆ IPHONE 12 SERIES
-    "iphone-12-pro-max": [92,  86, 80, 70, 58, 80],
-    "iphone-12-pro":     [90,  84, 78, 68, 55, 75],
-    "iphone-12":         [88,  82, 75, 65, 52, 75],
-    "iphone-12-mini":    [86,  80, 72, 62, 50, 70],
-
-    // THẾ HỆ IPHONE 11 SERIES
-    "iphone-11-pro-max": [90,  84, 78, 68, 55, 75],
-    "iphone-11-pro":     [88,  82, 76, 65, 52, 75],
-    "iphone-11":         [85,  80, 74, 62, 50, 70],
-
-    // THẾ HỆ IPHONE X / XS / XR
-    "iphone-xs-max":     [88,  82, 75, 65, 52, 75],
-    "iphone-xs":         [86,  80, 72, 62, 50, 70],
-    "iphone-xr":         [85,  78, 70, 60, 48, 70],
-    "iphone-x":          [84,  78, 70, 60, 48, 65],
-
-    // THẾ HỆ IPHONE 8 / 7 / 6 SERIES
-    "iphone-8-plus":     [85,  76, 68, 58, 45, 70],
-    "iphone-8":          [82,  74, 65, 55, 42, 65],
-    "iphone-7-plus":     [80,  72, 62, 52, 40, 65],
-    "iphone-7":          [78,  70, 60, 50, 38, 60],
-    "iphone-6s-plus":    [76,  68, 58, 48, 35, 60],
-    "iphone-6s":         [74,  65, 55, 45, 32, 55],
-    "iphone-6-plus":     [72,  62, 52, 42, 30, 55],
-    "iphone-6":          [70,  60, 50, 40, 25, 50]
-};
-
-// Định dạng nhãn text hiển thị tương ứng của thanh trượt
-const SLIDER_LABELS = [
-    { title: "Nhìn Xung Quanh", sub: "Quay camera" },
-    { title: "Red Dot / Ống Ngắm", sub: "Ngắm tâm chuẩn" },
-    { title: "Ống Ngắm 2x", sub: "Zoom 2x" },
-    { title: "Ống Ngắm 4x", sub: "Zoom 4x" },
-    { title: "Ống Ngắm AWM", sub: "Sniper tối ưu" },
-    { title: "Nhìn Tự Do", sub: "Quan sát tự do" }
-];
-
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", function () {
     
-    // ==========================================
-    // 1. XỬ LÝ MÀN HÌNH CHỜ (LOADING) CHỐNG KẸT
-    // ==========================================
-    const loadingScreen = document.getElementById("app-loading");
-    const skipBtn = document.getElementById("skip-loading-btn");
+    // Kho dữ liệu độ nhạy mặc định cho từng máy
+    const SENSITIVITY_DATABASE = {
+        "iPhone 17 Pro Max": { xungQuanh: 98, redDot: 90, zoom2x: 82, zoom4x: 70, awm: 60, tuDo: 88 },
+        "iPhone 17 Pro":     { xungQuanh: 99, redDot: 91, zoom2x: 84, zoom4x: 72, awm: 61, tuDo: 89 },
+        "iPhone 16 Pro Max": { xungQuanh: 100, redDot: 94, zoom2x: 86, zoom4x: 76, awm: 64, tuDo: 92 },
+        "iPhone 16 Pro":     { xungQuanh: 96, redDot: 88, zoom2x: 80, zoom4x: 70, awm: 58, tuDo: 85 },
+        "iPhone 15 Pro Max": { xungQuanh: 95, redDot: 85, zoom2x: 78, zoom4x: 68, awm: 55, tuDo: 80 },
+        "iPhone 15 Pro":     { xungQuanh: 94, redDot: 84, zoom2x: 76, zoom4x: 66, awm: 54, tuDo: 78 },
+        "iPhone 14 Pro Max": { xungQuanh: 92, redDot: 82, zoom2x: 75, zoom4x: 65, awm: 52, tuDo: 85 },
+        "iPhone 13 Pro Max": { xungQuanh: 100, redDot: 95, zoom2x: 88, zoom4x: 78, awm: 68, tuDo: 95 },
+        "iPhone 13 Pro":     { xungQuanh: 100, redDot: 92, zoom2x: 85, zoom4x: 75, awm: 65, tuDo: 90 },
+        "iPhone 12 Pro Max": { xungQuanh: 88, redDot: 78, zoom2x: 70, zoom4x: 60, awm: 48, tuDo: 75 },
+        "iPhone 11 Pro Max": { xungQuanh: 85, redDot: 75, zoom2x: 68, zoom4x: 58, awm: 45, tuDo: 70 },
+        "iPhone XS Max":     { xungQuanh: 82, redDot: 72, zoom2x: 65, zoom4x: 55, awm: 42, tuDo: 65 },
+        "iPhone 8 Plus":     { xungQuanh: 80, redDot: 70, zoom2x: 60, zoom4x: 50, awm: 40, tuDo: 60 },
+        "iPhone 7 Plus":     { xungQuanh: 75, redDot: 65, zoom2x: 55, zoom4x: 45, awm: 35, tuDo: 55 }
+    };
 
-    function hideLoadingScreen() {
-        if (loadingScreen) {
-            loadingScreen.classList.add("fade-out");
-            setTimeout(() => {
-                if (loadingScreen.parentNode) loadingScreen.remove();
-            }, 400);
-        }
-    }
+    const loginContainer = document.getElementById("loginContainer");
+    const appContainer = document.getElementById("appContainer");
+    const keyInput = document.getElementById("keyInput");
+    const loginBtn = document.getElementById("loginBtn");
+    const keyStatusText = document.getElementById("keyStatus");
+    const deviceSelect = document.getElementById("deviceSelect");
 
-    setTimeout(hideLoadingScreen, 1700); // Ẩn tự động sau khi chạy xong animation
-    if (skipBtn) skipBtn.addEventListener("click", hideLoadingScreen);
-    setTimeout(hideLoadingScreen, 3000); // Khóa bảo vệ lớp cuối chống đơ
+    // ========================================================
+    // THUẬT TOÁN ĐĂNG NHẬP KIỂM TRA KEY RANDOM (MỚI)
+    // ========================================================
+    loginBtn.addEventListener("click", function () {
+        const inputKey = keyInput.value.trim().toUpperCase(); // Chuyển hết thành chữ in hoa
 
+        // Định dạng cấu trúc: Phải bắt đầu bằng AOP-, ở giữa có đúng 8 chữ số, kết thúc bằng 1D, 7D, 30D hoặc VV
+        const keyPattern = /^AOP-\d{8}-(1D|7D|30D|VV)$/;
 
-    // ==========================================
-    // 2. KHỞI TẠO DANH SÁCH CHỌN THIẾT BỊ (SELECT BOX)
-    // ==========================================
-    const selectContainer = document.querySelector(".select-box");
-    
-    if (selectContainer) {
-        // Tạo thẻ select ẩn nhưng chuẩn HTML để hứng sự kiện thay đổi dòng máy
-        let selectHtml = `<select id="device-selector" style="background:transparent; color:#fff; border:none; width:100%; font-size:13px; outline:none; cursor:pointer;">`;
-        
-        // Tự động duyệt qua dữ liệu và render tùy chọn tương ứng
-        Object.keys(PHONE_DATABASE).forEach(key => {
-            const displayName = key.split("-").map(word => word.toUpperCase()).join(" ").replace("IPHONE", "iPhone");
-            // Đặt iPhone 13 Pro làm mặc định ban đầu giống ảnh mẫu
-            const isSelected = key === "iphone-13-pro" ? "selected" : "";
-            selectHtml += `<option value="${key}" ${isSelected}>${displayName}</option>`;
-        });
-        selectHtml += `</select>`;
-        
-        // Ghi đè cấu trúc chữ tĩnh thành dropdown tương tác thực tế
-        selectContainer.innerHTML = selectHtml;
-    }
+        if (keyPattern.test(inputKey)) {
+            loginBtn.textContent = "ĐANG GIẢI MÃ KEY CHUẨN...";
+            loginBtn.style.pointerEvents = "none";
 
+            // Phân tích ký tự đuôi của Key để biết người dùng đang kích hoạt gói nào
+            let targetTagId = "";
+            let durationLabel = "";
 
-    // ==========================================
-    // 3. HÀM TẠO HOẶC CẬP NHẬT CÁC THANH TRƯỢT ĐỘ NHẠY
-    // ==========================================
-    const sliderContainer = document.querySelector(".slider-group-container");
-
-    function renderSliders(deviceKey) {
-        if (!sliderContainer) return;
-        
-        // Lấy bộ mảng 6 chỉ số độ nhạy của thiết bị được chọn (nếu lỗi lấy tạm iPhone 13 Pro)
-        const currentData = PHONE_DATABASE[deviceKey] || PHONE_DATABASE["iphone-13-pro"];
-        sliderContainer.innerHTML = ""; // Xóa dữ liệu cũ để nạp mới hoàn toàn
-        
-        SLIDER_LABELS.forEach((label, index) => {
-            const currentVal = currentData[index];
-            const html = `
-                <div class="slider-item">
-                    <div class="slider-info">
-                        ${label.title}
-                        <span>${label.sub}</span>
-                    </div>
-                    <button class="step-btn minus-btn" type="button">-</button>
-                    <div class="slider-wrapper">
-                        <input type="range" min="0" max="100" value="${currentVal}">
-                    </div>
-                    <button class="step-btn plus-btn" type="button">+</button>
-                    <div class="val-box">${currentVal}</div>
-                </div>
-            `;
-            sliderContainer.insertAdjacentHTML("beforeend", html);
-        });
-
-        // Đăng ký lại sự kiện tương tác bấm kéo cho các nút vừa được sinh ra
-        bindSliderEvents();
-    }
-
-
-    // ==========================================
-    // 4. QUẢN LÝ SỰ KIỆN KÉO THANH TRƯỢT VÀ NÚT +/-
-    // ==========================================
-    function bindSliderEvents() {
-        document.querySelectorAll(".slider-item").forEach(item => {
-            const input = item.querySelector("input[type='range']");
-            const valBox = item.querySelector(".val-box");
-            const minusBtn = item.querySelector(".minus-btn");
-            const plusBtn = item.querySelector(".plus-btn");
-
-            function updateDisplay() {
-                valBox.textContent = input.value;
+            if (inputKey.endsWith("-1D")) {
+                targetTagId = "tag1Day";
+                durationLabel = "Gói 1 Ngày";
+            } else if (inputKey.endsWith("-7D")) {
+                targetTagId = "tag7Day";
+                durationLabel = "Gói 7 Ngày";
+            } else if (inputKey.endsWith("-30D")) {
+                targetTagId = "tag30Day";
+                durationLabel = "Gói 30 Ngày";
+            } else if (inputKey.endsWith("-VV")) {
+                targetTagId = "tagForever";
+                durationLabel = "Vĩnh Viễn";
             }
 
-            input.addEventListener("input", updateDisplay);
+            setTimeout(() => {
+                loginContainer.classList.add("hidden");
+                appContainer.classList.remove("hidden");
+                appContainer.classList.add("anim-fade-up");
 
-            minusBtn.addEventListener("click", () => {
-                let currentVal = parseInt(input.value);
-                if (currentVal > 0) {
-                    input.value = currentVal - 1;
-                    updateDisplay();
-                }
-            });
+                // Sáng đèn thẻ thời hạn tương ứng trên menu chính
+                document.getElementById(targetTagId).classList.add("active-key");
+                keyStatusText.textContent = `Đã kích hoạt (${durationLabel})`;
 
-            plusBtn.addEventListener("click", () => {
-                let currentVal = parseInt(input.value);
-                if (currentVal < 100) {
-                    input.value = currentVal + 1;
-                    updateDisplay();
-                }
-            });
+                loadDeviceSensitivity(deviceSelect.value);
+            }, 800);
+
+        } else {
+            alert("❌ MÃ KEY KHÔNG HỢP LỆ HOẶC SAI ĐỊNH DẠNG!\nHãy gõ lệnh trên Discord để nhận Key chuẩn.");
+            keyInput.focus();
+        }
+    });
+
+    keyInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") loginBtn.click();
+    });
+
+
+    // TỰ ĐỘNG ĐỔI THÔNG SỐ THEO MÁY
+    function loadDeviceSensitivity(deviceName) {
+        const config = SENSITIVITY_DATABASE[deviceName];
+        if (!config) return;
+
+        document.querySelectorAll(".slider-group").forEach(group => {
+            const type = group.getAttribute("data-type");
+            const targetValue = config[type];
+
+            if (targetValue !== undefined) {
+                const rangeInput = group.querySelector(".range-input");
+                const valDisplay = group.querySelector(".val-display");
+
+                rangeInput.value = targetValue;
+                valDisplay.textContent = targetValue;
+            }
         });
     }
 
+    deviceSelect.addEventListener("change", function() {
+        loadDeviceSensitivity(this.value);
+    });
 
-    // ==========================================
-    // 5. LẮNG NGHE SỰ KIỆN ĐỔI DÒNG MÁY KHÁC
-    // ==========================================
-    const deviceSelector = document.getElementById("device-selector");
-    if (deviceSelector) {
-        deviceSelector.addEventListener("change", (e) => {
-            renderSliders(e.target.value);
+    // ĐIỀU KHIỂN NÚT BẤM CỦA CÁC THANH KÉO SLIDER
+    const sliderGroups = document.querySelectorAll(".slider-group");
+    sliderGroups.forEach(group => {
+        const rangeInput = group.querySelector(".range-input");
+        const valDisplay = group.querySelector(".val-display");
+        const minBtn = group.querySelector(".min-btn");
+        const plusBtn = group.querySelector(".plus-btn");
+
+        rangeInput.addEventListener("input", function() {
+            valDisplay.textContent = this.value;
         });
-    }
 
+        minBtn.addEventListener("click", function() {
+            let currentVal = parseInt(rangeInput.value);
+            if (currentVal > 0) {
+                currentVal -= 1; rangeInput.value = currentVal; valDisplay.textContent = currentVal;
+            }
+        });
 
-    // ==========================================
-    // 6. XỬ LÝ ACTIVE TABS & NÚT LỆNH CHÂN TRANG
-    // ==========================================
-    document.querySelectorAll(".preset-btn, .grid-2 .btn, .grid-4 .btn, .bottom-nav .nav-item").forEach(btn => {
-        btn.addEventListener("click", function(e) {
-            if (this.classList.contains("nav-item")) e.preventDefault();
-            const siblings = this.parentElement.children;
-            Array.from(siblings).forEach(s => s.classList.remove("active"));
+        plusBtn.addEventListener("click", function() {
+            let currentVal = parseInt(rangeInput.value);
+            if (currentVal < 100) {
+                currentVal += 1; rangeInput.value = currentVal; valDisplay.textContent = currentVal;
+            }
+        });
+    });
+
+    // Các nút nền tảng phụ trợ
+    const platformButtons = document.querySelectorAll(".btn-platform");
+    platformButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            document.querySelector(".btn-platform.active").classList.remove("active");
             this.classList.add("active");
         });
     });
 
-    const applyBtn = document.querySelector(".btn-apply-main");
-    if (applyBtn) {
-        applyBtn.addEventListener("click", () => {
-            const selectedModelName = deviceSelector ? deviceSelector.options[deviceSelector.selectedIndex].text : "Thiết bị";
-            alert(`Đã tối ưu hóa thông số và áp dụng độ nhạy thành công cho ${selectedModelName}!`);
-        });
-    }
+    // Nút Áp dụng chuyển hướng vào game
+    const applyButton = document.getElementById("applyBtn");
+    applyButton.addEventListener("click", function () {
+        const selectedDevice = deviceSelect.value;
+        applyButton.textContent = "ĐANG LƯU DATA VÀO GAME...";
+        applyButton.style.pointerEvents = "none";
 
-    // Khởi chạy render lần đầu tiên với cấu hình iPhone 13 Pro làm gốc
-    renderSliders("iphone-13-pro");
+        setTimeout(() => {
+            applyButton.textContent = "ÁP DỤNG ĐỘ NHẠY";
+            applyButton.style.pointerEvents = "auto";
+            alert(`[THÀNH CÔNG] Đã nạp thông số cho ${selectedDevice}!\nĐang tự động chuyển hướng mở game...`);
+            
+            // Gọi lệnh hệ điều hành bật Free Fire
+            window.location.href = "freefire://";
+
+            setTimeout(function() {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (isIOS) {
+                    window.location.href = "https://apple.com";
+                } else {
+                    window.location.href = "https://google.com";
+                }
+            }, 500);
+        }, 1000);
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", function() {
+        alert("Đã lưu cấu hình!");
+    });
 });
