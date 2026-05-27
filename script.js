@@ -1,8 +1,10 @@
 let countdownTimer = null;
 let timeRemainingInSeconds = 0;
-let selectedGame = "freefire";
+let selectedGame = "freefire"; // Mặc định ban đầu chọn Free Fire thường
 
-// 1. FIX LỖI KẸT LOADING: Ẩn màn hình chào tự động
+// ==========================================
+// 1. FIX LỖI KẸT LOADING (MÀN HÌNH CHÀO)
+// ==========================================
 setTimeout(() => {
     const welcomeScreen = document.getElementById('welcome-screen');
     if (welcomeScreen) {
@@ -11,7 +13,9 @@ setTimeout(() => {
     }
 }, 2500);
 
-// 2. DATA ĐỘ NHẠY IPHONE (Giới hạn tăng lên 200)
+// ==========================================
+// 2. DATA ĐỘ NHẠY IPHONE (0 - 200) TỪ IP 7 ĐẾN IP 17
+// ==========================================
 const DEVICE_SENSITIVITY_DATABASE = {
     "ip7_8": { general: 185, reddot: 160, x2: 155, x4: 140 },
     "ipX":    { general: 170, reddot: 155, x2: 142, x4: 135 },
@@ -24,34 +28,29 @@ const DEVICE_SENSITIVITY_DATABASE = {
     "ip17":   { general: 195, reddot: 180, x2: 172, x4: 160 }
 };
 
-// Cấu trúc danh sách mã Key bảo mật hệ thống
 const VALID_KEYS = {
-    "KEY1D_ABCXYZ": { label: "1 Ngày (Test)", seconds: 86400 },      
+    "KEY1D_ABCXYZ": { label: "1 Ngày (Test)", seconds: 10 }, // 10 giây để test tự đá
     "KEY7D_POPQQQ": { label: "7 Ngày", seconds: 7 * 24 * 60 * 60 },  
     "KEY30D_MNO123": { label: "30 Ngày", seconds: 30 * 24 * 60 * 60 },
     "KEYFOREVER_VIP": { label: "VĨNH VIỄN", seconds: 999999999 }     
 };
 
-// 3. Hàm Xác Thực Key (ĐÃ FIX TỰ ĐỘNG CHUYỂN ĐỔI DẤU CÁCH)
+// ==========================================
+// 3. XÁC THỰC KEY & ĐỒNG BỘ FIX KHOẢNG TRẮNG
+// ==========================================
 function verifyKey() {
     let inputKey = document.getElementById('key-input').value.trim();
+    inputKey = inputKey.replace(/\s+/g, '_'); // Tự đổi dấu cách thành dấu gạch dưới
     
-    // Tự động sửa lỗi: Đổi dấu cách thành dấu gạch dưới _ để tránh bị kẹt như trong ảnh
-    inputKey = inputKey.replace(/\s+/g, '_'); 
-    
-    // Thêm cơ chế quét thông minh: Nếu key chứa định dạng vĩnh viễn ngẫu nhiên của bạn
-    if (inputKey.startsWith("KEYFOREVER_") && inputKey.length >= 15) {
+    // Hỗ trợ quét định dạng key tự động từ Bot cấp
+    if (inputKey.startsWith("KEYFOREVER_") && inputKey.length >= 14) {
         VALID_KEYS[inputKey] = { label: "VĨNH VIỄN", seconds: 999999999 };
-    }
-    // Quét bổ sung cho các cấu trúc key ngẫu nhiên khác sinh ra từ bot
-    else if (inputKey.startsWith("KEY7D_") && inputKey.length >= 10) {
+    } else if (inputKey.startsWith("KEY7D_") && inputKey.length >= 10) {
         VALID_KEYS[inputKey] = { label: "7 Ngày", seconds: 7 * 24 * 60 * 60 };
-    }
-    else if (inputKey.startsWith("KEY30D_") && inputKey.length >= 11) {
+    } else if (inputKey.startsWith("KEY30D_") && inputKey.length >= 11) {
         VALID_KEYS[inputKey] = { label: "30 Ngày", seconds: 30 * 24 * 60 * 60 };
     }
 
-    // Tiến hành kiểm tra và cấp quyền truy cập
     if (VALID_KEYS[inputKey]) {
         alert("🎉 Kích hoạt tài khoản PRO thành công!");
         document.getElementById('auth-container').classList.add('hidden');
@@ -61,11 +60,10 @@ function verifyKey() {
         startKeyCountdown();
         changeDeviceSettings(); 
     } else {
-        alert("❌ Mã Key không chính xác hoặc đã bị khóa khỏi hệ thống!");
+        alert("❌ Mã Key không chính xác hoặc đã hết hạn!");
     }
 }
 
-// 4. Đồng bộ hóa chuyển đổi dòng máy từ iPhone 7 đến iPhone 17
 function changeDeviceSettings() {
     const selectedDevice = document.getElementById('device-select').value;
     const config = DEVICE_SENSITIVITY_DATABASE[selectedDevice];
@@ -104,7 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// 5. Đồng hồ đếm ngược và TỰ ĐỘNG ĐÁ NGƯỜI DÙNG khi hết hạn
+// ==========================================
+// 4. HỆ THỐNG ĐẾM NGƯỢC THỜI GIAN & TỰ ĐỘNG ĐÁ RA
+// ==========================================
 function startKeyCountdown() {
     if (countdownTimer) clearInterval(countdownTimer);
     const vipTimeElement = document.getElementById('vip-time');
@@ -150,92 +150,93 @@ function kickUserOut(reasonMessage) {
     document.getElementById('key-input').value = ""; 
 }
 
-// Hàm Áp Dụng và Tự Động Chuyển Hướng Thông Minh Vào Đúng Bản Game Đã Chọn
+// ==========================================
+// 5. TỰ ĐỘNG CHUYỂN HƯỚNG ĐA NỀN TẢNG (CHẠY MỌI THIẾT BỊ)
+// ==========================================
 function applySettings() {
-    // 1. Kiểm tra điều kiện mã Key trước khi xử lý
     if (timeRemainingInSeconds <= 0) {
-        kickUserOut("❌ Thao tác thất bại! Key của bạn đã hết hạn.");
+        kickUserOut("❌ Thao tác thất bại! Key đã hết hạn.");
         return;
     }
 
-    // 2. Thay đổi trạng thái nút bấm tạo hiệu ứng Hack/Ghi đè tệp tin chuyên nghiệp
     const applyBtn = document.querySelector('.btn-apply');
     const originalText = applyBtn.innerText;
     applyBtn.innerText = "⚡ ĐANG GHI ĐÈ FILE CONFIG DPI...";
     applyBtn.disabled = true;
     applyBtn.style.opacity = "0.7";
 
-    // 3. Khởi chạy tiến trình chuyển hướng sau 1.5 giây thiết lập cấu hình
     setTimeout(() => {
         applyBtn.innerText = "🚀 ĐANG KHỞI ĐỘNG GAME...";
         
-        let scheme = "";      // Link dành cho iOS (iPhone)
-        let intent = "";      // Link dành cho Android
-        let fallbackUrl = ""; // Link dự phòng mở App Store/CH Play nếu máy chưa cài game
+        let iosScheme = "";
+        let androidIntent = "";
+        let pcFallbackUrl = "";
+        let appStoreUrl = "";
+        let playStoreUrl = "";
 
-        // Kiểm tra xem thiết bị hiện tại có phải là iPhone/iPad hay không
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const ua = navigator.userAgent.toLowerCase();
+        const isIOS = /ipad|iphone|ipod/.test(ua) && !window.MSStream;
+        const isAndroid = /android/.test(ua);
+        const isPC = !isIOS && !isAndroid;
 
-        // 4. XỬ LÝ GẮN LINK THEO TỪNG BẢN GAME
         if (selectedGame === "freefire") {
-            // Cấu hình Link cho Free Fire Thường (th)
-            scheme = "com.dts.freefireth://";
-            intent = "intent://#Intent;package=com.dts.freefireth;end";
-            fallbackUrl = isIOS 
-                ? "https://apple.com" 
-                : "https://google.com";
+            iosScheme = "com.dts.freefireth://";
+            androidIntent = "intent://#Intent;package=com.dts.freefireth;end";
+            appStoreUrl = "https://apple.com";
+            playStoreUrl = "https://google.com";
+            pcFallbackUrl = "https://garena.com"; 
         } else {
-            // Cấu hình Link cho Free Fire MAX
-            scheme = "com.dts.freefiremax://";
-            intent = "intent://#Intent;package=com.dts.freefiremax;end";
-            fallbackUrl = isIOS 
-                ? "https://apple.com" 
-                : "https://google.com";
+            iosScheme = "com.dts.freefiremax://";
+            androidIntent = "intent://#Intent;package=com.dts.freefiremax;end";
+            appStoreUrl = "https://apple.com";
+            playStoreUrl = "https://google.com";
+            pcFallbackUrl = "https://garena.com";
         }
 
-        // 5. THỰC HIỆN LỆNH KÍCH HOẠT MỞ GAME TRỰC TIẾP
-        let opened = false;
+        // --- KÍCH HOẠT CHUYỂN HƯỚNG THEO THIẾT BỊ ---
+        if (isPC) {
+            alert("🖥️ Đã lưu thông số Regedit DPI giả lập thành công!");
+            let openWeb = confirm("Bạn có muốn mở trang chủ để cập nhật game bản PC không?");
+            if (openWeb) window.open(pcFallbackUrl, '_blank');
+            resetButton();
+            return;
+        }
+
+        if (isIOS) {
+            window.location.href = iosScheme;
+            setTimeout(() => { window.location.assign(iosScheme); }, 250);
+        } 
         
-        // Thử lệnh mở mặc định (Tác dụng mạnh trên iOS và các trình duyệt Android đời mới)
-        window.location.href = scheme;
+        if (isAndroid) {
+            window.location.href = iosScheme.replace("com.dts", "freefire"); 
+            setTimeout(() => { window.location.href = androidIntent; }, 100);
+        }
 
-        // Chạy lệnh kích hoạt Intent phụ trợ sau 200ms nếu là thiết bị Android
-        setTimeout(() => {
-            if (!isIOS) {
-                window.location.href = intent;
-            }
-        }, 200);
-
-        // 6. XỬ LÝ LỖI NẾU MÁY NGƯỜI DÙNG CHƯA CÀI ĐẶT GAME (Bản Free Fire đó)
-        // Nếu sau 2.5 giây người dùng vẫn kẹt ở trình duyệt (không bị đẩy sang app game), hiện bảng hỏi tải game
+        // --- KIỂM TRA LỖI CHƯA CÀI GAME ---
+        let hasLeftPage = false;
         const checkBlur = setTimeout(() => {
-            if (!document.hidden && !opened) {
-                let confirmDownload = confirm("Không thể khởi động game tự động!\nPhát hiện thiết bị chưa cài đặt phiên bản game này. Bạn có muốn mở cửa hàng ứng dụng để tải xuống không?");
-                if (confirmDownload) {
-                    window.location.href = fallbackUrl;
-                }
-                // Khôi phục lại trạng thái ban đầu của nút bấm menu
-                applyBtn.innerText = originalText;
-                applyBtn.disabled = false;
-                applyBtn.style.opacity = "1";
+            if (!document.hidden && !hasLeftPage) {
+                let fallback = isIOS ? appStoreUrl : playStoreUrl;
+                let confirmDownload = confirm("Không thể tự động mở game!\nPhát hiện máy bạn chưa cài bản game này hoặc trình duyệt chặn mở app. Mở cửa hàng ứng dụng để tải xuống?");
+                if (confirmDownload) window.location.href = fallback;
+                resetButton();
             }
         }, 2500);
 
-        // Nếu chuyển hướng thành công (Trình duyệt bị ẩn đi), hủy bỏ lệnh thông báo lỗi chưa cài game ở trên
         document.addEventListener("visibilitychange", function onVisibilityChange() {
             if (document.hidden) {
-                opened = true;
+                hasLeftPage = true;
                 clearTimeout(checkBlur);
-                
-                // Trả nút bấm về trạng thái sẵn sàng cho lần sử dụng sau khi người dùng quay lại web
-                setTimeout(() => {
-                    applyBtn.innerText = originalText;
-                    applyBtn.disabled = false;
-                    applyBtn.style.opacity = "1";
-                }, 1000);
+                setTimeout(resetButton, 1000);
                 document.removeEventListener("visibilitychange", onVisibilityChange);
             }
         });
+
+        function resetButton() {
+            applyBtn.innerText = originalText;
+            applyBtn.disabled = false;
+            applyBtn.style.opacity = "1";
+        }
 
     }, 1500);
 }
