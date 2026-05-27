@@ -150,63 +150,84 @@ function kickUserOut(reasonMessage) {
     document.getElementById('key-input').value = ""; 
 }
 
-// 6. Áp dụng chuyển hướng thẳng vào ứng dụng Game (Free Fire hoặc Free Fire MAX)
+// Hàm Áp Dụng và Tự Động Chuyển Hướng Thông Minh Vào Đúng Bản Game Đã Chọn
 function applySettings() {
+    // 1. Kiểm tra điều kiện mã Key trước khi xử lý
     if (timeRemainingInSeconds <= 0) {
-        kickUserOut("❌ Thao tác thất bại! Key đã hết hạn.");
+        kickUserOut("❌ Thao tác thất bại! Key của bạn đã hết hạn.");
         return;
     }
 
+    // 2. Thay đổi trạng thái nút bấm tạo hiệu ứng Hack/Ghi đè tệp tin chuyên nghiệp
     const applyBtn = document.querySelector('.btn-apply');
     const originalText = applyBtn.innerText;
     applyBtn.innerText = "⚡ ĐANG GHI ĐÈ FILE CONFIG DPI...";
     applyBtn.disabled = true;
     applyBtn.style.opacity = "0.7";
 
+    // 3. Khởi chạy tiến trình chuyển hướng sau 1.5 giây thiết lập cấu hình
     setTimeout(() => {
         applyBtn.innerText = "🚀 ĐANG KHỞI ĐỘNG GAME...";
         
-        let scheme = "";
-        let intent = "";
-        let fallbackUrl = "";
+        let scheme = "";      // Link dành cho iOS (iPhone)
+        let intent = "";      // Link dành cho Android
+        let fallbackUrl = ""; // Link dự phòng mở App Store/CH Play nếu máy chưa cài game
 
+        // Kiểm tra xem thiết bị hiện tại có phải là iPhone/iPad hay không
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
+        // 4. XỬ LÝ GẮN LINK THEO TỪNG BẢN GAME
         if (selectedGame === "freefire") {
+            // Cấu hình Link cho Free Fire Thường (th)
             scheme = "com.dts.freefireth://";
             intent = "intent://#Intent;package=com.dts.freefireth;end";
-            fallbackUrl = isIOS ? "https://apple.com" : "https://google.com";
+            fallbackUrl = isIOS 
+                ? "https://apple.com" 
+                : "https://google.com";
         } else {
+            // Cấu hình Link cho Free Fire MAX
             scheme = "com.dts.freefiremax://";
             intent = "intent://#Intent;package=com.dts.freefiremax;end";
-            fallbackUrl = isIOS ? "https://apple.com" : "https://google.com";
+            fallbackUrl = isIOS 
+                ? "https://apple.com" 
+                : "https://google.com";
         }
 
+        // 5. THỰC HIỆN LỆNH KÍCH HOẠT MỞ GAME TRỰC TIẾP
         let opened = false;
+        
+        // Thử lệnh mở mặc định (Tác dụng mạnh trên iOS và các trình duyệt Android đời mới)
         window.location.href = scheme;
 
+        // Chạy lệnh kích hoạt Intent phụ trợ sau 200ms nếu là thiết bị Android
         setTimeout(() => {
             if (!isIOS) {
                 window.location.href = intent;
             }
         }, 200);
 
+        // 6. XỬ LÝ LỖI NẾU MÁY NGƯỜI DÙNG CHƯA CÀI ĐẶT GAME (Bản Free Fire đó)
+        // Nếu sau 2.5 giây người dùng vẫn kẹt ở trình duyệt (không bị đẩy sang app game), hiện bảng hỏi tải game
         const checkBlur = setTimeout(() => {
             if (!document.hidden && !opened) {
-                let confirmDownload = confirm("Không thể kích hoạt tự động mở Game!\nCó thể bạn chưa cài đặt phiên bản game này. Bạn có muốn đi tới cửa hàng ứng dụng để tải không?");
+                let confirmDownload = confirm("Không thể khởi động game tự động!\nPhát hiện thiết bị chưa cài đặt phiên bản game này. Bạn có muốn mở cửa hàng ứng dụng để tải xuống không?");
                 if (confirmDownload) {
                     window.location.href = fallbackUrl;
                 }
+                // Khôi phục lại trạng thái ban đầu của nút bấm menu
                 applyBtn.innerText = originalText;
                 applyBtn.disabled = false;
                 applyBtn.style.opacity = "1";
             }
         }, 2500);
 
+        // Nếu chuyển hướng thành công (Trình duyệt bị ẩn đi), hủy bỏ lệnh thông báo lỗi chưa cài game ở trên
         document.addEventListener("visibilitychange", function onVisibilityChange() {
             if (document.hidden) {
                 opened = true;
                 clearTimeout(checkBlur);
+                
+                // Trả nút bấm về trạng thái sẵn sàng cho lần sử dụng sau khi người dùng quay lại web
                 setTimeout(() => {
                     applyBtn.innerText = originalText;
                     applyBtn.disabled = false;
