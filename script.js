@@ -1,170 +1,220 @@
-document.addEventListener("DOMContentLoaded", function () {
+let countdownTimer = null;
+let timeRemainingInSeconds = 0;
+let selectedGame = "freefire";
+
+// 1. FIX LỖI KẸT LOADING: Ẩn màn hình chào tự động
+setTimeout(() => {
+    const welcomeScreen = document.getElementById('welcome-screen');
+    if (welcomeScreen) {
+        welcomeScreen.style.opacity = '0';
+        setTimeout(() => welcomeScreen.remove(), 500);
+    }
+}, 2500);
+
+// 2. DATA ĐỘ NHẠY IPHONE (Giới hạn tăng lên 200)
+const DEVICE_SENSITIVITY_DATABASE = {
+    "ip7_8": { general: 185, reddot: 160, x2: 155, x4: 140 },
+    "ipX":    { general: 170, reddot: 155, x2: 142, x4: 135 },
+    "ip11":   { general: 150, reddot: 130, x2: 125, x4: 110 },
+    "ip12":   { general: 135, reddot: 120, x2: 115, x4: 105 },
+    "ip13":   { general: 100, reddot: 92,  x2: 85,  x4: 75  },
+    "ip14":   { general: 125, reddot: 110, x2: 98,  x4: 88  },
+    "ip15":   { general: 145, reddot: 135, x2: 120, x4: 112 },
+    "ip16":   { general: 165, reddot: 150, x2: 138, x4: 122 },
+    "ip17":   { general: 195, reddot: 180, x2: 172, x4: 160 }
+};
+
+// Cấu trúc danh sách mã Key bảo mật hệ thống
+const VALID_KEYS = {
+    "KEY1D_ABCXYZ": { label: "1 Ngày (Test)", seconds: 86400 },      
+    "KEY7D_POPQQQ": { label: "7 Ngày", seconds: 7 * 24 * 60 * 60 },  
+    "KEY30D_MNO123": { label: "30 Ngày", seconds: 30 * 24 * 60 * 60 },
+    "KEYFOREVER_VIP": { label: "VĨNH VIỄN", seconds: 999999999 }     
+};
+
+// 3. Hàm Xác Thực Key (ĐÃ FIX TỰ ĐỘNG CHUYỂN ĐỔI DẤU CÁCH)
+function verifyKey() {
+    let inputKey = document.getElementById('key-input').value.trim();
     
-    // Kho dữ liệu độ nhạy mặc định cho từng máy
-    const SENSITIVITY_DATABASE = {
-        "iPhone 17 Pro Max": { xungQuanh: 98, redDot: 90, zoom2x: 82, zoom4x: 70, awm: 60, tuDo: 88 },
-        "iPhone 17 Pro":     { xungQuanh: 99, redDot: 91, zoom2x: 84, zoom4x: 72, awm: 61, tuDo: 89 },
-        "iPhone 16 Pro Max": { xungQuanh: 100, redDot: 94, zoom2x: 86, zoom4x: 76, awm: 64, tuDo: 92 },
-        "iPhone 16 Pro":     { xungQuanh: 96, redDot: 88, zoom2x: 80, zoom4x: 70, awm: 58, tuDo: 85 },
-        "iPhone 15 Pro Max": { xungQuanh: 95, redDot: 85, zoom2x: 78, zoom4x: 68, awm: 55, tuDo: 80 },
-        "iPhone 15 Pro":     { xungQuanh: 94, redDot: 84, zoom2x: 76, zoom4x: 66, awm: 54, tuDo: 78 },
-        "iPhone 14 Pro Max": { xungQuanh: 92, redDot: 82, zoom2x: 75, zoom4x: 65, awm: 52, tuDo: 85 },
-        "iPhone 13 Pro Max": { xungQuanh: 100, redDot: 95, zoom2x: 88, zoom4x: 78, awm: 68, tuDo: 95 },
-        "iPhone 13 Pro":     { xungQuanh: 100, redDot: 92, zoom2x: 85, zoom4x: 75, awm: 65, tuDo: 90 },
-        "iPhone 12 Pro Max": { xungQuanh: 88, redDot: 78, zoom2x: 70, zoom4x: 60, awm: 48, tuDo: 75 },
-        "iPhone 11 Pro Max": { xungQuanh: 85, redDot: 75, zoom2x: 68, zoom4x: 58, awm: 45, tuDo: 70 },
-        "iPhone XS Max":     { xungQuanh: 82, redDot: 72, zoom2x: 65, zoom4x: 55, awm: 42, tuDo: 65 },
-        "iPhone 8 Plus":     { xungQuanh: 80, redDot: 70, zoom2x: 60, zoom4x: 50, awm: 40, tuDo: 60 },
-        "iPhone 7 Plus":     { xungQuanh: 75, redDot: 65, zoom2x: 55, zoom4x: 45, awm: 35, tuDo: 55 }
-    };
-
-    const loginContainer = document.getElementById("loginContainer");
-    const appContainer = document.getElementById("appContainer");
-    const keyInput = document.getElementById("keyInput");
-    const loginBtn = document.getElementById("loginBtn");
-    const keyStatusText = document.getElementById("keyStatus");
-    const deviceSelect = document.getElementById("deviceSelect");
-
-    // ========================================================
-    // THUẬT TOÁN ĐĂNG NHẬP KIỂM TRA KEY RANDOM (MỚI)
-    // ========================================================
-    loginBtn.addEventListener("click", function () {
-        const inputKey = keyInput.value.trim().toUpperCase(); // Chuyển hết thành chữ in hoa
-
-        // Định dạng cấu trúc: Phải bắt đầu bằng AOP-, ở giữa có đúng 8 chữ số, kết thúc bằng 1D, 7D, 30D hoặc VV
-        const keyPattern = /^AOP-\d{8}-(1D|7D|30D|VV)$/;
-
-        if (keyPattern.test(inputKey)) {
-            loginBtn.textContent = "ĐANG GIẢI MÃ KEY CHUẨN...";
-            loginBtn.style.pointerEvents = "none";
-
-            // Phân tích ký tự đuôi của Key để biết người dùng đang kích hoạt gói nào
-            let targetTagId = "";
-            let durationLabel = "";
-
-            if (inputKey.endsWith("-1D")) {
-                targetTagId = "tag1Day";
-                durationLabel = "Gói 1 Ngày";
-            } else if (inputKey.endsWith("-7D")) {
-                targetTagId = "tag7Day";
-                durationLabel = "Gói 7 Ngày";
-            } else if (inputKey.endsWith("-30D")) {
-                targetTagId = "tag30Day";
-                durationLabel = "Gói 30 Ngày";
-            } else if (inputKey.endsWith("-VV")) {
-                targetTagId = "tagForever";
-                durationLabel = "Vĩnh Viễn";
-            }
-
-            setTimeout(() => {
-                loginContainer.classList.add("hidden");
-                appContainer.classList.remove("hidden");
-                appContainer.classList.add("anim-fade-up");
-
-                // Sáng đèn thẻ thời hạn tương ứng trên menu chính
-                document.getElementById(targetTagId).classList.add("active-key");
-                keyStatusText.textContent = `Đã kích hoạt (${durationLabel})`;
-
-                loadDeviceSensitivity(deviceSelect.value);
-            }, 800);
-
-        } else {
-            alert("❌ MÃ KEY KHÔNG HỢP LỆ HOẶC SAI ĐỊNH DẠNG!\nHãy gõ lệnh trên Discord để nhận Key chuẩn.");
-            keyInput.focus();
-        }
-    });
-
-    keyInput.addEventListener("keypress", function (e) {
-        if (e.key === "Enter") loginBtn.click();
-    });
-
-
-    // TỰ ĐỘNG ĐỔI THÔNG SỐ THEO MÁY
-    function loadDeviceSensitivity(deviceName) {
-        const config = SENSITIVITY_DATABASE[deviceName];
-        if (!config) return;
-
-        document.querySelectorAll(".slider-group").forEach(group => {
-            const type = group.getAttribute("data-type");
-            const targetValue = config[type];
-
-            if (targetValue !== undefined) {
-                const rangeInput = group.querySelector(".range-input");
-                const valDisplay = group.querySelector(".val-display");
-
-                rangeInput.value = targetValue;
-                valDisplay.textContent = targetValue;
-            }
-        });
+    // Tự động sửa lỗi: Đổi dấu cách thành dấu gạch dưới _ để tránh bị kẹt như trong ảnh
+    inputKey = inputKey.replace(/\s+/g, '_'); 
+    
+    // Thêm cơ chế quét thông minh: Nếu key chứa định dạng vĩnh viễn ngẫu nhiên của bạn
+    if (inputKey.startsWith("KEYFOREVER_") && inputKey.length >= 15) {
+        VALID_KEYS[inputKey] = { label: "VĨNH VIỄN", seconds: 999999999 };
+    }
+    // Quét bổ sung cho các cấu trúc key ngẫu nhiên khác sinh ra từ bot
+    else if (inputKey.startsWith("KEY7D_") && inputKey.length >= 10) {
+        VALID_KEYS[inputKey] = { label: "7 Ngày", seconds: 7 * 24 * 60 * 60 };
+    }
+    else if (inputKey.startsWith("KEY30D_") && inputKey.length >= 11) {
+        VALID_KEYS[inputKey] = { label: "30 Ngày", seconds: 30 * 24 * 60 * 60 };
     }
 
-    deviceSelect.addEventListener("change", function() {
-        loadDeviceSensitivity(this.value);
+    // Tiến hành kiểm tra và cấp quyền truy cập
+    if (VALID_KEYS[inputKey]) {
+        alert("🎉 Kích hoạt tài khoản PRO thành công!");
+        document.getElementById('auth-container').classList.add('hidden');
+        document.getElementById('app-container').classList.remove('hidden');
+        
+        timeRemainingInSeconds = VALID_KEYS[inputKey].seconds;
+        startKeyCountdown();
+        changeDeviceSettings(); 
+    } else {
+        alert("❌ Mã Key không chính xác hoặc đã bị khóa khỏi hệ thống!");
+    }
+}
+
+// 4. Đồng bộ hóa chuyển đổi dòng máy từ iPhone 7 đến iPhone 17
+function changeDeviceSettings() {
+    const selectedDevice = document.getElementById('device-select').value;
+    const config = DEVICE_SENSITIVITY_DATABASE[selectedDevice];
+
+    if (config) {
+        document.getElementById('slide-general').value = config.general;
+        document.getElementById('slide-reddot').value = config.reddot;
+        document.getElementById('slide-x2').value = config.x2;
+        document.getElementById('slide-x4').value = config.x4;
+
+        document.getElementById('val-general').innerText = config.general;
+        document.getElementById('val-reddot').innerText = config.reddot;
+        document.getElementById('val-x2').innerText = config.x2;
+        document.getElementById('val-x4').innerText = config.x4;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const gameButtons = document.querySelectorAll('.card.half:nth-child(2) .btn-group button');
+    gameButtons.forEach((btn, index) => {
+        btn.addEventListener('click', () => {
+            gameButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedGame = (index === 0) ? "freefire" : "ffmax";
+        });
     });
 
-    // ĐIỀU KHIỂN NÚT BẤM CỦA CÁC THANH KÉO SLIDER
-    const sliderGroups = document.querySelectorAll(".slider-group");
-    sliderGroups.forEach(group => {
-        const rangeInput = group.querySelector(".range-input");
-        const valDisplay = group.querySelector(".val-display");
-        const minBtn = group.querySelector(".min-btn");
-        const plusBtn = group.querySelector(".plus-btn");
-
-        rangeInput.addEventListener("input", function() {
-            valDisplay.textContent = this.value;
-        });
-
-        minBtn.addEventListener("click", function() {
-            let currentVal = parseInt(rangeInput.value);
-            if (currentVal > 0) {
-                currentVal -= 1; rangeInput.value = currentVal; valDisplay.textContent = currentVal;
-            }
-        });
-
-        plusBtn.addEventListener("click", function() {
-            let currentVal = parseInt(rangeInput.value);
-            if (currentVal < 100) {
-                currentVal += 1; rangeInput.value = currentVal; valDisplay.textContent = currentVal;
-            }
-        });
-    });
-
-    // Các nút nền tảng phụ trợ
-    const platformButtons = document.querySelectorAll(".btn-platform");
-    platformButtons.forEach(button => {
-        button.addEventListener("click", function () {
-            document.querySelector(".btn-platform.active").classList.remove("active");
-            this.classList.add("active");
-        });
-    });
-
-    // Nút Áp dụng chuyển hướng vào game
-    const applyButton = document.getElementById("applyBtn");
-    applyButton.addEventListener("click", function () {
-        const selectedDevice = deviceSelect.value;
-        applyButton.textContent = "ĐANG LƯU DATA VÀO GAME...";
-        applyButton.style.pointerEvents = "none";
-
-        setTimeout(() => {
-            applyButton.textContent = "ÁP DỤNG ĐỘ NHẠY";
-            applyButton.style.pointerEvents = "auto";
-            alert(`[THÀNH CÔNG] Đã nạp thông số cho ${selectedDevice}!\nĐang tự động chuyển hướng mở game...`);
-            
-            // Gọi lệnh hệ điều hành bật Free Fire
-            window.location.href = "freefire://";
-
-            setTimeout(function() {
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                if (isIOS) {
-                    window.location.href = "https://apple.com";
-                } else {
-                    window.location.href = "https://google.com";
-                }
-            }, 500);
-        }, 1000);
-    });
-
-    document.getElementById("saveBtn").addEventListener("click", function() {
-        alert("Đã lưu cấu hình!");
+    const sliders = ['general', 'reddot', 'x2', 'x4'];
+    sliders.forEach(id => {
+        const sliderInput = document.getElementById(`slide-${id}`);
+        if (sliderInput) {
+            sliderInput.addEventListener('input', (e) => {
+                document.getElementById(`val-${id}`).innerText = e.target.value;
+            });
+        }
     });
 });
+
+// 5. Đồng hồ đếm ngược và TỰ ĐỘNG ĐÁ NGƯỜI DÙNG khi hết hạn
+function startKeyCountdown() {
+    if (countdownTimer) clearInterval(countdownTimer);
+    const vipTimeElement = document.getElementById('vip-time');
+
+    countdownTimer = setInterval(() => {
+        if (timeRemainingInSeconds > 50000000) {
+            vipTimeElement.innerText = "VĨNH VIỄN";
+            return;
+        }
+
+        timeRemainingInSeconds--;
+
+        if (timeRemainingInSeconds <= 5) {
+            vipTimeElement.style.color = "#ff3333";
+            vipTimeElement.style.textShadow = "0 0 10px #ff3333";
+        } else {
+            vipTimeElement.style.color = "#00f2fe"; 
+            vipTimeElement.style.textShadow = "none";
+        }
+
+        if (timeRemainingInSeconds <= 0) {
+            clearInterval(countdownTimer);
+            vipTimeElement.style.color = "#00f2fe"; 
+            kickUserOut("⏰ Hết hạn thời gian sử dụng mã Key! Bạn đã bị đá ra khỏi ứng dụng.");
+            return;
+        }
+
+        const hours = Math.floor(timeRemainingInSeconds / 3600);
+        const minutes = Math.floor((timeRemainingInSeconds % 3600) / 60);
+        const seconds = timeRemainingInSeconds % 60;
+
+        vipTimeElement.innerText = 
+            String(hours).padStart(2, '0') + ":" + 
+            String(minutes).padStart(2, '0') + ":" + 
+            String(seconds).padStart(2, '0');
+    }, 1000);
+}
+
+function kickUserOut(reasonMessage) {
+    alert(reasonMessage);
+    document.getElementById('app-container').classList.add('hidden');
+    document.getElementById('auth-container').classList.remove('hidden');
+    document.getElementById('key-input').value = ""; 
+}
+
+// 6. Áp dụng chuyển hướng thẳng vào ứng dụng Game (Free Fire hoặc Free Fire MAX)
+function applySettings() {
+    if (timeRemainingInSeconds <= 0) {
+        kickUserOut("❌ Thao tác thất bại! Key đã hết hạn.");
+        return;
+    }
+
+    const applyBtn = document.querySelector('.btn-apply');
+    const originalText = applyBtn.innerText;
+    applyBtn.innerText = "⚡ ĐANG GHI ĐÈ FILE CONFIG DPI...";
+    applyBtn.disabled = true;
+    applyBtn.style.opacity = "0.7";
+
+    setTimeout(() => {
+        applyBtn.innerText = "🚀 ĐANG KHỞI ĐỘNG GAME...";
+        
+        let scheme = "";
+        let intent = "";
+        let fallbackUrl = "";
+
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+        if (selectedGame === "freefire") {
+            scheme = "com.dts.freefireth://";
+            intent = "intent://#Intent;package=com.dts.freefireth;end";
+            fallbackUrl = isIOS ? "https://apple.com" : "https://google.com";
+        } else {
+            scheme = "com.dts.freefiremax://";
+            intent = "intent://#Intent;package=com.dts.freefiremax;end";
+            fallbackUrl = isIOS ? "https://apple.com" : "https://google.com";
+        }
+
+        let opened = false;
+        window.location.href = scheme;
+
+        setTimeout(() => {
+            if (!isIOS) {
+                window.location.href = intent;
+            }
+        }, 200);
+
+        const checkBlur = setTimeout(() => {
+            if (!document.hidden && !opened) {
+                let confirmDownload = confirm("Không thể kích hoạt tự động mở Game!\nCó thể bạn chưa cài đặt phiên bản game này. Bạn có muốn đi tới cửa hàng ứng dụng để tải không?");
+                if (confirmDownload) {
+                    window.location.href = fallbackUrl;
+                }
+                applyBtn.innerText = originalText;
+                applyBtn.disabled = false;
+                applyBtn.style.opacity = "1";
+            }
+        }, 2500);
+
+        document.addEventListener("visibilitychange", function onVisibilityChange() {
+            if (document.hidden) {
+                opened = true;
+                clearTimeout(checkBlur);
+                setTimeout(() => {
+                    applyBtn.innerText = originalText;
+                    applyBtn.disabled = false;
+                    applyBtn.style.opacity = "1";
+                }, 1000);
+                document.removeEventListener("visibilitychange", onVisibilityChange);
+            }
+        });
+
+    }, 1500);
+}

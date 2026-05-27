@@ -2,184 +2,126 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AOP ĐỘ NHẠY - THIẾT BỊ ĐỘC QUYỀN</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AOP ĐỘ NHẠY - PRO</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cloudflare.com">
 </head>
 <body>
 
-    <!-- 1. MÀN HÌNH KHÓA NHẬP KEY -->
-    <div id="loginContainer" class="menu-container anim-fade-up">
-        <div class="header">
-            <h2>KÍCH HOẠT HỆ THỐNG</h2>
-            <p>VUI LÒNG NHẬP KEY ĐỂ TIẾP TỤC</p>
-        </div>
-
-        <div class="section-title">Mã Key Bản Quyền</div>
-        <div class="input-wrapper">
-            <input type="text" id="keyInput" placeholder="Nhập mã key tại đây..." autocomplete="off">
-        </div>
-
-        <div class="key-note">
-            <p>💡 <b>Gợi ý Test thử các Key:</b></p>
-            <ul>
-                <li>Gói 1 Ngày: <code class="test-key">KEY-1DAY-TEST</code></li>
-                <li>Gói 7 Ngày: <code class="test-key">KEY-7DAY-TEST</code></li>
-                <li>Gói 30 Ngày: <code class="test-key">KEY-30DAY-TEST</code></li>
-                <li>Vĩnh Viễn: <code class="test-key">KEY-FOREVER-PRO</code></li>
-            </ul>
-        </div>
-
-        <button id="loginBtn" class="apply-btn">Xác Thực Mã Key</button>
-    </div>
-
-
-    <!-- 2. GIAO DIỆN CHÍNH (ĐỘ NHẠY TỰ ĐỘNG THEO MÁY) -->
-    <div id="appContainer" class="menu-container hidden">
-        <div class="header">
+    <!-- Màn hình chào khi vào ứng dụng (Splash Screen) -->
+    <div id="welcome-screen">
+        <div class="welcome-content">
+            <i class="fa-solid fa-crosshairs logo-icon"></i>
             <h2>AOP ĐỘ NHẠY</h2>
             <p>NÂNG CẤP • TỐI ƯU • CHIẾN THẮNG</p>
-            <span class="badge-pro">PRO</span>
+            <div class="loader"></div>
         </div>
+    </div>
 
-        <!-- Trạng thái Key -->
-        <div class="status-bar">
-            <span>Trạng thái: <b id="keyStatus" style="color: #00f0ff;">Đã kích hoạt</b></span>
+    <!-- Màn hình khóa yêu cầu kích hoạt mã Key -->
+    <div id="auth-container">
+        <div class="auth-card">
+            <div class="lock-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3>KÍCH HOẠT HỆ THỐNG</h3>
+            <p>Vui lòng nhập Key kích hoạt để sử dụng tính năng PRO</p>
+            <input type="text" id="key-input" placeholder="Nhập mã Key của bạn tại đây...">
+            <button class="btn-auth" onclick="verifyKey()">XÁC NHẬN KÍCH HOẠT</button>
+            <div class="contact-buy">Chưa có key? Vui lòng lấy key tại Bot Discord.</div>
         </div>
+    </div>
 
-        <!-- CHỌN NỀN TẢNG -->
-        <div class="section-title">Chọn Nền Tảng</div>
-        <div class="flex-box">
-            <button class="btn-platform active">iOS</button>
-            <button class="btn-platform">Android</button>
-        </div>
-
-        <!-- THIẾT BỊ IPHONE -->
-        <div class="section-title">Thiết Bị iPhone</div>
-        <div class="select-wrapper">
-            <select id="deviceSelect" class="custom-select">
-                <option value="iPhone 17 Pro Max">iPhone 17 Pro Max</option>
-                <option value="iPhone 17 Pro">iPhone 17 Pro</option>
-                <option value="iPhone 16 Pro Max">iPhone 16 Pro Max</option>
-                <option value="iPhone 16 Pro">iPhone 16 Pro</option>
-                <option value="iPhone 15 Pro Max">iPhone 15 Pro Max</option>
-                <option value="iPhone 15 Pro">iPhone 15 Pro</option>
-                <option value="iPhone 14 Pro Max">iPhone 14 Pro Max</option>
-                <option value="iPhone 13 Pro Max">iPhone 13 Pro Max</option>
-                <option value="iPhone 13 Pro" selected>iPhone 13 Pro</option>
-                <option value="iPhone 12 Pro Max">iPhone 12 Pro Max</option>
-                <option value="iPhone 11 Pro Max">iPhone 11 Pro Max</option>
-                <option value="iPhone XS Max">iPhone XS Max</option>
-                <option value="iPhone 8 Plus">iPhone 8 Plus</option>
-                <option value="iPhone 7 Plus">iPhone 7 Plus</option>
-            </select>
-        </div>
-
-        <!-- THỜI GIAN GÓI KEY -->
-        <div class="section-title">Thông Tin Gói Của Bạn</div>
-        <div class="grid-options">
-            <button class="btn-key" id="tag1Day" disabled>Gói 1 Ngày</button>
-            <button class="btn-key" id="tag7Day" disabled>Gói 7 Ngày</button>
-            <button class="btn-key" id="tag30Day" disabled>Gói 30 Ngày</button>
-            <button class="btn-key" id="tagForever" disabled>Vĩnh Viễn</button>
-        </div>
-
-        <!-- ================= KHU VỰC THANH KÉO ĐỘ NHẠY ================= -->
-        <div class="section-title">Điều Chỉnh Độ Nhạy (Auto Config)</div>
-        <div class="sliders-list">
-            
-            <!-- Slider 1 -->
-            <div class="slider-group" data-type="xungQuanh">
-                <div class="slider-info">
-                    <span class="slider-name">Nhìn Xung Quanh</span>
-                    <span class="slider-sub">Quay camera</span>
+    <!-- Giao diện Menu chính của ứng dụng -->
+    <div id="app-container" class="hidden">
+        <header>
+            <div class="app-title">
+                <i class="fa-solid fa-crosshairs target-top"></i>
+                <div>
+                    <h1>AOP ĐỘ NHẠY</h1>
+                    <span>NÂNG CẤP • TỐI ƯU • CHIẾN THẮNG</span>
                 </div>
-                <div class="slider-control">
-                    <input type="range" class="range-input" min="0" max="100">
-                    <span class="val-display">0</span>
-                    <button class="btn-step min-btn">-</button>
-                    <button class="btn-step plus-btn">+</button>
+            </div>
+            <div class="badge-pro">👑 PRO VIP</div>
+        </header>
+
+        <main>
+            <!-- Lựa chọn Nền tảng & Game -->
+            <div class="row-flex">
+                <div class="card half">
+                    <h3>CHỌN NỀN TẢNG</h3>
+                    <div class="btn-group platform-group">
+                        <button class="active" onclick="selectPlatform('ios')"><i class="fa-brands fa-apple"></i> iOS</button>
+                        <button onclick="selectPlatform('android')"><i class="fa-brands fa-android"></i> Android</button>
+                    </div>
+                </div>
+                <div class="card half">
+                    <h3>CHỌN GAME</h3>
+                    <div class="btn-group game-group">
+                        <button class="active" onclick="selectGame('freefire')"><i class="fa-solid fa-fire"></i> Free Fire</button>
+                        <button onclick="selectGame('ffmax')"><i class="fa-solid fa-gem"></i> FF MAX</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Slider 2 -->
-            <div class="slider-group" data-type="redDot">
-                <div class="slider-info">
-                    <span class="slider-name">Red Dot / Ống Ngắm</span>
-                    <span class="slider-sub">Ngắm tâm chuẩn</span>
+            <!-- Lựa chọn thiết bị & Bộ đếm thời gian VIP -->
+            <div class="row-flex">
+                <div class="card half">
+                    <h3>THIẾT BỊ (IPHONE 7 - 17)</h3>
+                    <div class="select-wrapper">
+                        <select id="device-select" onchange="changeDeviceSettings()">
+                            <optgroup label="iPhone Đời Cũ">
+                                <option value="ip7">iPhone 7 / 7 Plus</option>
+                                <option value="ip8">iPhone 8 / 8 Plus</option>
+                                <option value="ipX">iPhone X / XR / XS Max</option>
+                            </optgroup>
+                            <optgroup label="iPhone Đời Trung">
+                                <option value="ip11">iPhone 11 Pro Max</option>
+                                <option value="ip12">iPhone 12 Pro Max</option>
+                                <option value="ip13" selected>iPhone 13 Pro Max</option>
+                            </optgroup>
+                            <optgroup label="iPhone Đời Mới">
+                                <option value="ip14">iPhone 14 Pro Max</option>
+                                <option value="ip15">iPhone 15 Pro Max</option>
+                                <option value="ip16">iPhone 16 Pro Max</option>
+                                <option value="ip17">iPhone 17 Pro Max</option>
+                            </optgroup>
+                        </select>
+                    </div>
                 </div>
-                <div class="slider-control">
-                    <input type="range" class="range-input" min="0" max="100">
-                    <span class="val-display">0</span>
-                    <button class="btn-step min-btn">-</button>
-                    <button class="btn-step plus-btn">+</button>
-                </div>
-            </div>
-
-            <!-- Slider 3 -->
-            <div class="slider-group" data-type="zoom2x">
-                <div class="slider-info">
-                    <span class="slider-name">Ống Ngắm 2x</span>
-                    <span class="slider-sub">Zoom 2x</span>
-                </div>
-                <div class="slider-control">
-                    <input type="range" class="range-input" min="0" max="100">
-                    <span class="val-display">0</span>
-                    <button class="btn-step min-btn">-</button>
-                    <button class="btn-step plus-btn">+</button>
-                </div>
-            </div>
-
-            <!-- Slider 4 -->
-            <div class="slider-group" data-type="zoom4x">
-                <div class="slider-info">
-                    <span class="slider-name">Ống Ngắm 4x</span>
-                    <span class="slider-sub">Zoom 4x</span>
-                </div>
-                <div class="slider-control">
-                    <input type="range" class="range-input" min="0" max="100">
-                    <span class="val-display">0</span>
-                    <button class="btn-step min-btn">-</button>
-                    <button class="btn-step plus-btn">+</button>
+                <div class="card half info-vip">
+                    <div class="vip-title">THỜI GIAN CÒN LẠI</div>
+                    <div class="time-countdown" id="vip-time">00:00:00</div>
                 </div>
             </div>
 
-            <!-- Slider 5 -->
-            <div class="slider-group" data-type="awm">
-                <div class="slider-info">
-                    <span class="slider-name">Ống Ngắm AWM</span>
-                    <span class="slider-sub">Sniper tối ưu</span>
+            <!-- Bảng kéo chỉnh thông số Độ nhạy tối đa lên 200 -->
+            <div class="card sensitivity-panel">
+                <h3>ĐIỀU CHỈNH ĐỘ NHẠY <i class="fa-solid fa-circle-question help-icon"></i></h3>
+                
+                <div class="slider-group">
+                    <label>Nhìn Xung Quanh <span id="val-general">100</span></label>
+                    <input type="range" id="slide-general" min="0" max="200" value="100">
                 </div>
-                <div class="slider-control">
-                    <input type="range" class="range-input" min="0" max="100">
-                    <span class="val-display">0</span>
-                    <button class="btn-step min-btn">-</button>
-                    <button class="btn-step plus-btn">+</button>
+
+                <div class="slider-group">
+                    <label>Red Dot / Ống Ngắm <span id="val-reddot">92</span></label>
+                    <input type="range" id="slide-reddot" min="0" max="200" value="92">
+                </div>
+
+                <div class="slider-group">
+                    <label>Ống Ngắm 2x <span id="val-x2">85</span></label>
+                    <input type="range" id="slide-x2" min="0" max="200" value="85">
+                </div>
+
+                <div class="slider-group">
+                    <label>Ống Ngắm 4x <span id="val-x4">75</span></label>
+                    <input type="range" id="slide-x4" min="0" max="200" value="75">
                 </div>
             </div>
 
-            <!-- Slider 6 -->
-            <div class="slider-group" data-type="tuDo">
-                <div class="slider-info">
-                    <span class="slider-name">Nhìn Tự Do</span>
-                    <span class="slider-sub">Quan sát tự do</span>
-                </div>
-                <div class="slider-control">
-                    <input type="range" class="range-input" min="0" max="100">
-                    <span class="val-display">0</span>
-                    <button class="btn-step min-btn">-</button>
-                    <button class="btn-step plus-btn">+</button>
-                </div>
-            </div>
-
-        </div>
-        <!-- ============================================================= -->
-
-        <!-- HÀM THỰC THI -->
-        <div class="action-box">
-            <button id="applyBtn" class="apply-btn">Áp Dụng Độ Nhạy</button>
-            <button id="saveBtn" class="save-btn">Lưu Preset</button>
-        </div>
+            <!-- Nút áp dụng và kích hoạt Deep Link -->
+            <button class="btn-apply" onclick="applySettings()">🚀 ÁP DỤNG ĐỘ NHẠY</button>
+        </main>
     </div>
 
     <script src="script.js"></script>
