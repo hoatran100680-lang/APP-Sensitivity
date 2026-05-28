@@ -18,7 +18,6 @@ let checkKeyInterval = null;
 document.addEventListener("DOMContentLoaded", () => {
     const deviceSelect = document.getElementById("deviceSelect");
     
-    // Đổ dữ liệu thiết bị vào menu lựa chọn
     for (let key in deviceDatabase) {
         let option = document.createElement("option");
         option.value = key;
@@ -38,8 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     setupSliderListeners();
-    
-    // Mặc định ban đầu hiển thị thông số dòng đầu tiên nhưng bị khóa màn hình
     applyDeviceSensitivity(deviceSelect.value);
     autoLoadSavedKey();
 });
@@ -68,36 +65,61 @@ function setupSliderListeners() {
     });
 }
 
-// --- XỬ LÝ KÍCH HOẠT VÀ ĐẾM NGƯỢC KHÓA APP ---
-
+// --- HỆ THỐNG GIẢI MÃ KIỂM TRA CHẶN KEY CŨ ---
 function checkKeyVIP() {
     const key = document.getElementById("keyInput").value.trim().toUpperCase();
-    let durationMinutes = 0;
-    let isForever = false;
-    let label = "";
-
-    if (key.startsWith("KEY_1MIN_")) { durationMinutes = 1; label = "Gói Test 1 Phút"; }
-    else if (key.startsWith("KEY_1DAY_")) { durationMinutes = 24 * 60; label = "Gói 1 Ngày"; }
-    else if (key.startsWith("KEY_7DAY_")) { durationMinutes = 7 * 24 * 60; label = "Gói 7 Ngày"; }
-    else if (key.startsWith("KEY_30DAY_")) { durationMinutes = 30 * 24 * 60; label = "Gói 30 Ngày"; }
-    else if (key.startsWith("KEY_FOREVER_")) { isForever = true; label = "Gói VĨNH VIỄN"; }
-    else {
-        alert("❌ Mã Key không đúng cấu trúc hoặc đã bị sử dụng!");
+    const now = new Date().getTime();
+    
+    if (!key) {
+        alert("Vui lòng nhập mã Key!");
         return;
     }
 
-    const now = new Date().getTime();
-    keyExpirationTime = isForever ? "FOREVER" : now + (durationMinutes * 60 * 1000);
+    // Tách phần mốc thời gian được mã hóa ở đuôi Key
+    const parts = key.split("_TS_");
+    if (parts.length !== 2) {
+        alert("❌ Mã Key sai cấu trúc hoặc không hợp lệ!");
+        return;
+    }
 
+    const keyTypeAndRand = parts[0];
+    const encodedTimestamp = parts[1]; // Đây là mốc thời gian hết hạn từ Admin cấp
+
+    let label = "";
+    if (keyTypeAndRand.startsWith("KEY_1MIN")) label = "Gói Test 1 Phút";
+    else if (keyTypeAndRand.startsWith("KEY_1DAY")) label = "Gói VIP 1 Ngày";
+    else if (keyTypeAndRand.startsWith("KEY_7DAY")) label = "Gói VIP 7 Ngày";
+    else if (keyTypeAndRand.startsWith("KEY_30DAY")) label = "Gói VIP 30 Ngày";
+    else if (keyTypeAndRand.startsWith("KEY_FOREVER")) label = "Gói VĨNH VIỄN";
+    else {
+        alert("❌ Định dạng gói không đúng!");
+        return;
+    }
+
+    // Xác định mốc hết hạn
+    if (encodedTimestamp === "FOREVER") {
+        keyExpirationTime = "FOREVER";
+    } else {
+        // Chuyển chuỗi timestamp ngược lại thành số miligiây
+        keyExpirationTime = parseInt(encodedTimestamp) * 1000;
+        
+        // KIỂM TRA CHIẾN THUẬT: Nếu thời gian hiện tại lớn hơn mốc này -> KEY CŨ ĐÃ HẾT HẠN
+        if (now >= keyExpirationTime) {
+            alert("❌ KÍCH HOẠT THẤT BẠI: Mã Key này đã hết hạn sử dụng từ trước. Không thể tái nhập!");
+            executeLockApp();
+            return;
+        }
+    }
+
+    // Nếu vượt qua kiểm tra, lưu trạng thái và kích hoạt
     localStorage.setItem("aop_expire", keyExpirationTime);
     localStorage.setItem("aop_label", label);
-
     executeActivation(label);
 }
 
 function executeActivation(label) {
     isKeyActivated = true;
-    document.getElementById("lockOverlay").style.display = "none"; // MỞ KHÓA APP
+    document.getElementById("lockOverlay").style.display = "none";
     
     const statusText = document.getElementById("keyStatus");
     const vipBadge = document.getElementById("vipBadge");
@@ -117,7 +139,7 @@ function executeActivation(label) {
 
             if (timeLeft <= 0) {
                 clearInterval(checkKeyInterval);
-                executeLockApp(); // VĂNG APP NGAY LẬP TỨC
+                executeLockApp();
             } else {
                 const hours = Math.floor(timeLeft / (1000 * 60 * 60));
                 const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
@@ -128,8 +150,6 @@ function executeActivation(label) {
             }
         }, 1000);
     }
-    
-    // Cập nhật lại thông số chuẩn theo máy ngay khi mở khóa thành công
     applyDeviceSensitivity(document.getElementById("deviceSelect").value);
 }
 
@@ -140,7 +160,6 @@ function executeLockApp() {
     localStorage.removeItem("aop_expire");
     localStorage.removeItem("aop_label");
 
-    // HIỂN THỊ LẠI MÀN HÌNH KHÓA CHE PHỦ TOÀN BỘ APP
     document.getElementById("lockOverlay").style.display = "flex";
     
     const statusText = document.getElementById("keyStatus");
@@ -148,18 +167,15 @@ function executeLockApp() {
 
     vipBadge.textContent = "HẾT HẠN";
     vipBadge.className = "vip-status-badge";
-    statusText.textContent = "❌ Hết hạn dùng thử! Vui lòng gia hạn thêm Key.";
+    statusText.textContent = "❌ Key hết hạn! Hãy mua mã mới.";
     statusText.className = "status-text text-warning";
     document.getElementById("keyInput").value = "";
 
-    // Reset thông số về 0
     document.getElementById("sensGeneral").value = 0;
     document.getElementById("sensRedDot").value = 0;
     document.getElementById("sens2x").value = 0;
     document.getElementById("sens4x").value = 0;
     updateUIValues();
-    
-    alert("⚠️ KHÓA BẢN QUYỀN: Hết hạn sử dụng Key VIP. Hệ thống đã dừng tối ưu!");
 }
 
 function autoLoadSavedKey() {
@@ -179,6 +195,6 @@ function autoLoadSavedKey() {
             }
         }
     } else {
-        document.getElementById("lockOverlay").style.display = "flex"; // Khóa mặc định ban đầu
+        document.getElementById("lockOverlay").style.display = "flex";
     }
 }
