@@ -1,148 +1,184 @@
-// Thay IP localhost thành IP VPS/Máy chủ của bạn khi treo online
-const API_URL = "http://127.0.0.1:8000";
-
-// Dữ liệu cấu hình độ nhạy riêng biệt cho từng dòng máy từ iPhone 7 đến iPhone 17
 const deviceDatabase = {
-    "iPhone 7/8":       { look: 80,  red: 70, x2: 65, x4: 55, awm: 45, free: 75 },
-    "iPhone 7+/8+":     { look: 82,  red: 72, x2: 68, x4: 58, awm: 48, free: 78 },
-    "iPhone X/XR":      { look: 88,  red: 78, x2: 72, x4: 62, awm: 52, free: 82 },
-    "iPhone XS/XS Max": { look: 90,  red: 80, x2: 75, x4: 65, awm: 55, free: 85 },
-    "iPhone 11 Series": { look: 92,  red: 84, x2: 78, x4: 68, awm: 58, free: 88 },
-    "iPhone 12 Pro":    { look: 94,  red: 86, x2: 80, x4: 70, awm: 60, free: 90 },
-    "iPhone 13 Pro":    { look: 100, red: 92, x2: 85, x4: 75, awm: 65, free: 90 }, // Khớp 100% hình mẫu
-    "iPhone 14 Pro":    { look: 100, red: 94, x2: 88, x4: 78, awm: 68, free: 92 },
-    "iPhone 15 Pro":    { look: 100, red: 96, x2: 90, x4: 80, awm: 70, free: 94 },
-    "iPhone 16 Pro":    { look: 100, red: 98, x2: 92, x4: 82, awm: 72, free: 96 },
-    "iPhone 17 Pro":    { look: 100, red: 100,x2: 95, x4: 85, awm: 75, free: 98 }
+    "iphone7":   { name: "iPhone 7 / 7 Plus", general: 98, redDot: 95, x2: 90, x4: 88 },
+    "iphone8":   { name: "iPhone 8 / 8 Plus", general: 95, redDot: 92, x2: 88, x4: 85 },
+    "iphonex":   { name: "iPhone X / XS / XR", general: 92, redDot: 88, x2: 85, x4: 82 },
+    "iphone11":  { name: "iPhone 11 Series",  general: 90, redDot: 86, x2: 83, x4: 80 },
+    "iphone12":  { name: "iPhone 12 Series",  general: 88, redDot: 84, x2: 80, x4: 78 },
+    "iphone13":  { name: "iPhone 13 / 14 Thường", general: 86, redDot: 82, x2: 78, x4: 75 },
+    "iphone13p": { name: "iPhone 13 Pro -> 14 Pro Max (120Hz)", general: 82, redDot: 78, x2: 74, x4: 70 },
+    "iphone15":  { name: "iPhone 15 Series",  general: 80, redDot: 76, x2: 72, x4: 68 },
+    "iphone16":  { name: "iPhone 16 Series",  general: 78, redDot: 74, x2: 70, x4: 65 },
+    "iphone17":  { name: "iPhone 17 Series (Mới nhất)", general: 75, redDot: 72, x2: 68, x4: 62 }
 };
 
-const sliderConfigs = [
-    { id: "look", label: "Nhìn Xung Quanh", sub: "Quay camera" },
-    { id: "red",  label: "Red Dot / Ống Ngắm", sub: "Ngắm tâm chuẩn" },
-    { id: "x2",   label: "Ống Ngắm 2x", sub: "Zoom 2x" },
-    { id: "x4",   label: "Ống Ngắm 4x", sub: "Zoom 4x" },
-    { id: "awm",  label: "Ống Ngắm AWM", sub: "Sniper tối ưu" },
-    { id: "free", label: "Nhìn Tự Do", sub: "Quan sát tự do" }
-];
+let isKeyActivated = false;
+let keyExpirationTime = null;
+let checkKeyInterval = null;
 
-let syncInterval = null;
-let remainingSeconds = 0;
-let isVinhVien = false;
-
-window.onload = function() {
-    const select = document.getElementById("device-select");
-    Object.keys(deviceDatabase).forEach(device => {
-        let opt = document.createElement("option");
-        opt.value = device; opt.innerText = device;
-        if(device === "iPhone 13 Pro") opt.selected = true;
-        select.appendChild(opt);
-    });
-    buildSliders();
-    changeDevice();
-    checkLocalSession(); 
-};
-
-function buildSliders() {
-    const container = document.getElementById("sliders-container");
-    container.innerHTML = "";
-    sliderConfigs.forEach(cfg => {
-        container.innerHTML += `
-            <div class="slider-item">
-                <div class="slider-info"><b>${cfg.label}</b><span>${cfg.sub}</span></div>
-                <div class="slider-wrapper">
-                    <input type="range" id="range-${cfg.id}" min="0" max="100" oninput="updateVal('${cfg.id}')">
-                    <button class="btn-step" onclick="step('${cfg.id}', -1)">-</button>
-                    <span class="slider-val" id="val-${cfg.id}">0</span>
-                    <button class="btn-step" onclick="step('${cfg.id}', 1)">+</button>
-                </div>
-            </div>`;
-    });
-}
-
-function updateVal(id) { document.getElementById(`val-${id}`).innerText = document.getElementById(`range-${id}`).value; }
-function step(id, amount) { 
-    let input = document.getElementById(`range-${id}`); 
-    input.value = Math.max(0, Math.min(100, parseInt(input.value) + amount)); 
-    updateVal(id); 
-}
-
-function changeDevice() {
-    let device = document.getElementById("device-select").value;
-    let data = deviceDatabase[device];
-    if(data) { sliderConfigs.forEach(cfg => { document.getElementById(`range-${cfg.id}`).value = data[cfg.id]; updateVal(cfg.id); }); }
-}
-
-function setPreset(type) {
-    document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-    if(type === 'coban') { sliderConfigs.forEach(cfg => { document.getElementById(`range-${cfg.id}`).value = 50; updateVal(cfg.id); }); } else { changeDevice(); }
-}
-
-function resetSliders() { changeDevice(); }
-function applySettings() { alert("Đã áp dụng độ nhạy đám mây thành công!"); }
-
-// KÍCH HOẠT VÀ ĐỒNG BỘ VỚI SERVER API
-function verifyKey() {
-    const inputKey = document.getElementById("key-input").value.trim();
-    const msg = document.getElementById("lock-msg");
-
-    if(!inputKey) { msg.innerText = "Vui lòng nhập mã Key!"; return; }
-    msg.innerText = "🔄 Đang xác thực dữ liệu qua API...";
-
-    fetch(`${API_URL}/verify-key?key=${encodeURIComponent(inputKey)}`)
-    .then(res => { if (!res.ok) return res.json().then(e => { throw new Error(e.detail); }); return res.json(); })
-    .then(data => {
-        localStorage.setItem("aop_active_key", inputKey);
-        if (data.type === "vinhvien") { isVinhVien = true; remainingSeconds = 0; } 
-        else { isVinhVien = false; remainingSeconds = data.remaining; }
-        enterApp();
-    })
-    .catch(err => { msg.innerText = "❌ " + err.message; });
-}
-
-function enterApp() {
-    document.getElementById("lock-screen").classList.add("hidden");
-    document.getElementById("main-menu").classList.remove("hidden");
-    if (syncInterval) clearInterval(syncInterval);
-    if (isVinhVien) {
-        document.getElementById("countdown").innerText = "VĨNH VIỄN";
-        document.getElementById("countdown").style.color = "#ffd600";
+document.addEventListener("DOMContentLoaded", () => {
+    const deviceSelect = document.getElementById("deviceSelect");
+    
+    // Đổ dữ liệu thiết bị vào menu lựa chọn
+    for (let key in deviceDatabase) {
+        let option = document.createElement("option");
+        option.value = key;
+        option.textContent = deviceDatabase[key].name;
+        deviceSelect.appendChild(option);
     }
-    startRealtimeSync();
+
+    deviceSelect.addEventListener("change", (e) => {
+        if (isKeyActivated) applyDeviceSensitivity(e.target.value);
+    });
+
+    document.getElementById("btnActivate").addEventListener("click", checkKeyVIP);
+
+    document.getElementById("btnApply").addEventListener("click", () => {
+        if (!isKeyActivated) return;
+        alert("🎉 ĐÃ BƠM ĐỘ NHẠY SẴN SÀNG! Vào game vuốt tâm ngay.");
+    });
+
+    setupSliderListeners();
+    
+    // Mặc định ban đầu hiển thị thông số dòng đầu tiên nhưng bị khóa màn hình
+    applyDeviceSensitivity(deviceSelect.value);
+    autoLoadSavedKey();
+});
+
+function applyDeviceSensitivity(deviceKey) {
+    const config = deviceDatabase[deviceKey];
+    if (!config) return;
+
+    document.getElementById("sensGeneral").value = config.general;
+    document.getElementById("sensRedDot").value = config.redDot;
+    document.getElementById("sens2x").value = config.x2;
+    document.getElementById("sens4x").value = config.x4;
+    updateUIValues();
 }
 
-// THEO DÕI REALTIME PHIÊN SỬ DỤNG (PING MỖI 3 GIÂY)
-function startRealtimeSync() {
-    updateClockDisplay();
-    syncInterval = setInterval(() => {
-        const activeKey = localStorage.getItem("aop_active_key");
-        if (!activeKey) { kickUserOut("Hệ thống yêu cầu đăng nhập."); return; }
-
-        fetch(`${API_URL}/verify-key?key=${encodeURIComponent(activeKey)}`)
-        .then(res => { if (!res.ok) return res.json().then(e => { throw new Error(e.detail); }); return res.json(); })
-        .then(data => { if (data.type !== "vinhvien") { remainingSeconds = data.remaining; updateClockDisplay(); } })
-        .catch(err => { kickUserOut(err.message); }); // Bị Admin xóa key hoặc hết hạn sẽ nhảy thẳng vào đây
-    }, 3000);
+function updateUIValues() {
+    document.getElementById("valGeneral").textContent = document.getElementById("sensGeneral").value;
+    document.getElementById("valRedDot").textContent = document.getElementById("sensRedDot").value;
+    document.getElementById("val2x").textContent = document.getElementById("sens2x").value;
+    document.getElementById("val4x").textContent = document.getElementById("sens4x").value;
 }
 
-function updateClockDisplay() {
-    if (isVinhVien) return;
-    let hrs = Math.floor(remainingSeconds / 3600);
-    let mins = Math.floor((remainingSeconds % 3600) / 60);
-    let secs = remainingSeconds % 60;
-    document.getElementById("countdown").innerText = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+function setupSliderListeners() {
+    ["sensGeneral", "sensRedDot", "sens2x", "sens4x"].forEach(id => {
+        document.getElementById(id).addEventListener("input", updateUIValues);
+    });
 }
 
-function kickUserOut(reason) {
-    clearInterval(syncInterval);
-    localStorage.removeItem("aop_active_key");
-    document.getElementById("main-menu").classList.add("hidden");
-    document.getElementById("lock-screen").classList.remove("hidden");
-    document.getElementById("lock-msg").innerText = `⚠️ Thiết bị đã bị đá: ${reason}`;
-    alert(`Thông báo: ${reason}`);
+// --- XỬ LÝ KÍCH HOẠT VÀ ĐẾM NGƯỢC KHÓA APP ---
+
+function checkKeyVIP() {
+    const key = document.getElementById("keyInput").value.trim().toUpperCase();
+    let durationMinutes = 0;
+    let isForever = false;
+    let label = "";
+
+    if (key.startsWith("KEY_1MIN_")) { durationMinutes = 1; label = "Gói Test 1 Phút"; }
+    else if (key.startsWith("KEY_1DAY_")) { durationMinutes = 24 * 60; label = "Gói 1 Ngày"; }
+    else if (key.startsWith("KEY_7DAY_")) { durationMinutes = 7 * 24 * 60; label = "Gói 7 Ngày"; }
+    else if (key.startsWith("KEY_30DAY_")) { durationMinutes = 30 * 24 * 60; label = "Gói 30 Ngày"; }
+    else if (key.startsWith("KEY_FOREVER_")) { isForever = true; label = "Gói VĨNH VIỄN"; }
+    else {
+        alert("❌ Mã Key không đúng cấu trúc hoặc đã bị sử dụng!");
+        return;
+    }
+
+    const now = new Date().getTime();
+    keyExpirationTime = isForever ? "FOREVER" : now + (durationMinutes * 60 * 1000);
+
+    localStorage.setItem("aop_expire", keyExpirationTime);
+    localStorage.setItem("aop_label", label);
+
+    executeActivation(label);
 }
 
-function checkLocalSession() {
-    const activeKey = localStorage.getItem("aop_active_key");
-    if (activeKey) { document.getElementById("key-input").value = activeKey; verifyKey(); }
+function executeActivation(label) {
+    isKeyActivated = true;
+    document.getElementById("lockOverlay").style.display = "none"; // MỞ KHÓA APP
+    
+    const statusText = document.getElementById("keyStatus");
+    const vipBadge = document.getElementById("vipBadge");
+    
+    vipBadge.textContent = "VIP ACTIVE";
+    vipBadge.className = "vip-status-badge vip-active";
+
+    if (checkKeyInterval) clearInterval(checkKeyInterval);
+
+    if (keyExpirationTime === "FOREVER") {
+        statusText.textContent = `👑 Đã kích hoạt: ${label}`;
+        statusText.className = "status-text text-success";
+    } else {
+        checkKeyInterval = setInterval(() => {
+            const now = new Date().getTime();
+            const timeLeft = keyExpirationTime - now;
+
+            if (timeLeft <= 0) {
+                clearInterval(checkKeyInterval);
+                executeLockApp(); // VĂNG APP NGAY LẬP TỨC
+            } else {
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                statusText.textContent = `✅ ${label} (Hết hạn sau: ${hours}h ${minutes}m ${seconds}s)`;
+                statusText.className = "status-text text-success";
+            }
+        }, 1000);
+    }
+    
+    // Cập nhật lại thông số chuẩn theo máy ngay khi mở khóa thành công
+    applyDeviceSensitivity(document.getElementById("deviceSelect").value);
+}
+
+function executeLockApp() {
+    isKeyActivated = false;
+    keyExpirationTime = null;
+
+    localStorage.removeItem("aop_expire");
+    localStorage.removeItem("aop_label");
+
+    // HIỂN THỊ LẠI MÀN HÌNH KHÓA CHE PHỦ TOÀN BỘ APP
+    document.getElementById("lockOverlay").style.display = "flex";
+    
+    const statusText = document.getElementById("keyStatus");
+    const vipBadge = document.getElementById("vipBadge");
+
+    vipBadge.textContent = "HẾT HẠN";
+    vipBadge.className = "vip-status-badge";
+    statusText.textContent = "❌ Hết hạn dùng thử! Vui lòng gia hạn thêm Key.";
+    statusText.className = "status-text text-warning";
+    document.getElementById("keyInput").value = "";
+
+    // Reset thông số về 0
+    document.getElementById("sensGeneral").value = 0;
+    document.getElementById("sensRedDot").value = 0;
+    document.getElementById("sens2x").value = 0;
+    document.getElementById("sens4x").value = 0;
+    updateUIValues();
+    
+    alert("⚠️ KHÓA BẢN QUYỀN: Hết hạn sử dụng Key VIP. Hệ thống đã dừng tối ưu!");
+}
+
+function autoLoadSavedKey() {
+    const savedExpire = localStorage.getItem("aop_expire");
+    const savedLabel = localStorage.getItem("aop_label");
+
+    if (savedExpire) {
+        if (savedExpire === "FOREVER") {
+            keyExpirationTime = "FOREVER";
+            executeActivation(savedLabel);
+        } else {
+            keyExpirationTime = parseInt(savedExpire);
+            if (keyExpirationTime > new Date().getTime()) {
+                executeActivation(savedLabel);
+            } else {
+                executeLockApp();
+            }
+        }
+    } else {
+        document.getElementById("lockOverlay").style.display = "flex"; // Khóa mặc định ban đầu
+    }
 }

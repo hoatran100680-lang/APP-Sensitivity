@@ -2,157 +2,124 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AOP ĐỘ NHẠY PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AOP ĐỘ NHẠY - PHIÊN BẢN PRO</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cloudflare.com">
 </head>
 <body>
-    <!-- Hiệu ứng LED viền chạy quanh màn hình thiết bị -->
-    <div class="led-border"></div>
-
-    <!-- KHUNG CHỨA ỨNG DỤNG BẢO VỆ CHỐNG TRÀN VÀ TRÀN MÀN HÌNH -->
     <div class="app-container">
-
-        <!-- MÀN HÌNH KHÓA KEY -->
-        <div id="lock-screen" class="screen-wrapper">
+        <!-- MÀN HÌNH KHÓA (Sẽ mờ và chặn tương tác khi hết hạn/chưa có key) -->
+        <div id="lockOverlay" class="lock-overlay">
             <div class="lock-box">
-                <h2><i class="fa-solid fa-key"></i> KÍCH HOẠT HỆ THỐNG</h2>
-                <p>Vui lòng nhập Key kích hoạt đồng bộ từ Discord</p>
-                <input type="text" id="key-input" placeholder="Nhập mã Key tại đây...">
-                <button onclick="verifyKey()"><i class="fa-solid fa-unlock"></i> KÍCH HOẠT NGAY</button>
-                <div id="lock-msg" class="error-msg"></div>
+                <span class="lock-icon">🔒</span>
+                <h2>HỆ THỐNG ĐANG KHÓA</h2>
+                <p>Vui lòng nhập Mã Key VIP ở phía dưới để kích hoạt toàn bộ tính năng và độ nhạy tối ưu.</p>
             </div>
         </div>
 
-        <!-- MÀN HÌNH CHÍNH (NẰM TRONG KHUNG CUỐN AN TOÀN) -->
-        <div id="main-menu" class="screen-wrapper hidden">
-            <div class="scrollable-content">
-                <!-- Header -->
-                <header>
-                    <div class="brand">
-                        <img src="https://imgur.com" alt="Logo" class="logo">
-                        <div>
-                            <h1>AOP ĐỘ NHẠY</h1>
-                            <p class="subtitle">NÂNG CẤP • TỐI ƯU • CHIẾN THẮNG</p>
-                        </div>
-                    </div>
-                    <div class="badge-pro">👑 PRO</div>
-                </header>
-
-                <!-- Chọn nền tảng & Game -->
-                <div class="row">
-                    <div class="card half">
-                        <h3>CHỌN NỀN TẢNG</h3>
-                        <div class="btn-group">
-                            <button class="btn active"><i class="fa-brands fa-apple"></i> iOS</button>
-                            <button class="btn"><i class="fa-brands fa-android"></i> Android</button>
-                        </div>
-                    </div>
-                    <div class="card half">
-                        <h3>CHỌN GAME</h3>
-                        <div class="btn-group grid-4">
-                            <button class="btn active"><i class="fa-solid fa-fire"></i> FF</button>
-                            <button class="btn">MAX</button>
-                            <button class="btn">VN</button>
-                            <button class="btn">Khác</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Thiết bị & Thời gian -->
-                <div class="row">
-                    <div class="card half">
-                        <h3>THIẾT BỊ</h3>
-                        <select id="device-select" onchange="changeDevice()">
-                            <!-- Tự động thêm từ iPhone 7 đến iPhone 17 bằng JS -->
-                        </select>
-                    </div>
-                    <div class="card half align-center">
-                        <div class="vip-expiry">
-                            <i class="fa-regular fa-clock"></i>
-                            <div>
-                                <span class="lbl">THỜI GIAN CÒN LẠI</span>
-                                <span id="countdown" class="val">--:--:--</span>
-                            </div>
-                            <span class="vip-badge">VIP</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Preset Độ nhạy -->
-                <div class="card">
-                    <div class="flex-space">
-                        <h3>CHỌN PRESET ĐỘ NHẠY <span class="new-tag">MỚI</span></h3>
-                        <span class="link">QUẢN LÝ PRESET</span>
-                    </div>
-                    <div class="btn-group grid-5">
-                        <button class="btn-preset" onclick="setPreset('coban')"><b>Cơ Bản</b><br><span>Ổn định</span></button>
-                        <button class="btn-preset active" onclick="setPreset('nangcao')"><b>Nâng Cao</b><br><span>Cân bằng</span></button>
-                        <button class="btn-preset" onclick="setPreset('pro')"><b>Chuyên Nghiệp</b><br><span>Headshot</span></button>
-                        <button class="btn-preset" onclick="setPreset('yt')"><b>Youtuber</b><br><span>Pro player</span></button>
-                        <button class="btn-preset" onclick="setPreset('custom')"><b>Tùy Chỉnh</b><br><span>Tự chỉnh</span></button>
-                    </div>
-                </div>
-
-                <!-- Điều chỉnh độ nhạy Sliders -->
-                <div class="card">
-                    <div class="flex-space">
-                        <h3>ĐIỀU CHỈNH ĐỘ NHẠY <i class="fa-regular fa-circle-question"></i></h3>
-                        <span class="link" onclick="resetSliders()">ĐẶT LẠI</span>
-                    </div>
-                    <div class="slider-list" id="sliders-container">
-                        <!-- Tạo tự động bằng JS -->
-                    </div>
-                </div>
-
-                <!-- Công cụ tối ưu -->
-                <div class="card">
-                    <h3>CÔNG CỤ TỐI ƯU</h3>
-                    <div class="grid-4 gap-10">
-                        <div class="opt-box"><i class="fa-solid fa-hand-pointer text-cyan"></i> <b>Tối Ưu Touch</b><span>Tăng nhạy chạm</span></div>
-                        <div class="opt-box"><i class="fa-solid fa-bolt text-green"></i> <b>Giảm Giật Lag</b><span>Ổn định FPS</span></div>
-                        <div class="opt-box"><i class="fa-solid fa-crosshairs text-red"></i> <b>Tăng Chính Xác</b><span>Dễ kéo tâm</span></div>
-                        <div class="opt-box"><i class="fa-solid fa-battery-three-quarters text-yellow"></i> <b>Tối Ưu Pin</b><span>Tiết kiệm pin</span></div>
-                    </div>
-                </div>
-
-                <!-- Thống kê & Xem trước -->
-                <div class="row">
-                    <div class="card half">
-                        <h3>THỐNG KÊ</h3>
-                        <div class="grid-2 text-center">
-                            <div class="stat"><span class="text-green">87% ↑</span><p>Tỷ lệ HS</p></div>
-                            <div class="stat"><span class="text-cyan">1.25x ↑</span><p>Phản xạ</p></div>
-                            <div class="stat"><span class="text-green">32% ↑</span><p>Mượt cảm</p></div>
-                            <div class="stat"><span class="text-cyan">99%</span><p>Ổn định</p></div>
-                        </div>
-                    </div>
-                    <div class="card half">
-                        <h3>XEM TRƯỚC TRONG GAME</h3>
-                        <div class="preview-box">
-                            <img src="https://imgur.com" alt="Preview Game">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom Actions -->
-                <div class="actions">
-                    <button class="btn-apply" onclick="applySettings()"><i class="fa-solid fa-wand-magic-sparkles"></i> ÁP DỤNG ĐỘ NHẠY</button>
-                    <button class="btn-save"><i class="fa-solid fa-floppy-disk"></i> LƯU PRESET</button>
+        <!-- Header -->
+        <header>
+            <div class="logo-area">
+                <span class="logo-icon">🐺</span>
+                <div>
+                    <h1>AOP ĐỘ NHẠY</h1>
+                    <p class="subtitle">NĂNG CẤP • TỐI ƯU • CHIẾN THẮNG</p>
                 </div>
             </div>
+            <div class="badge-pro">👑 PRO</div>
+        </header>
 
-            <!-- Fixed Navigation Bar -->
-            <nav class="bottom-nav">
-                <a href="#" class="active"><i class="fa-solid fa-house"></i><span>Trang Chủ</span></a>
-                <a href="#"><i class="fa-solid fa-chart-simple"></i><span>Phân Tích</span></a>
-                <a href="#"><i class="fa-solid fa-users"></i><span>Cộng Đồng</span></a>
-                <a href="#"><i class="fa-solid fa-book"></i><span>Hướng Dẫn</span></a>
-                <a href="#"><i class="fa-solid fa-gear"></i><span>Cài Đặt</span></a>
-            </nav>
+        <!-- Hệ thống Kích hoạt & Đếm ngược -->
+        <section class="card border-glow">
+            <div class="card-header">
+                <h3>🔑 KÍCH HOẠT HỆ THỐNG</h3>
+                <span id="vipBadge" class="vip-status-badge">CHƯA VIP</span>
+            </div>
+            <div class="key-input-group">
+                <input type="text" id="keyInput" placeholder="Dán mã Key (1, 7, 30 ngày hoặc VV)...">
+                <button id="btnActivate">KÍCH HOẠT</button>
+            </div>
+            <p id="keyStatus" class="status-text text-warning">Thiết bị chưa được cấp bản quyền!</p>
+        </section>
+
+        <!-- Bộ lọc thiết bị & Chọn Game -->
+        <section class="card">
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>CHỌN NỀN TẢNG</label>
+                    <div class="platform-selector">
+                        <button class="active">🍏 iOS</button>
+                        <button disabled>🤖 Android</button>
+                    </div>
+                </div>
+                <div class="flex-col">
+                    <label>THIẾT BỊ</label>
+                    <select id="deviceSelect">
+                        <!-- Tự động thêm từ iPhone 7 đến 17 qua JS -->
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Điều chỉnh độ nhạy -->
+        <section class="card">
+            <h3>🎯 ĐIỀU CHỈNH ĐỘ NHẠY <span class="preset-badge">Nâng Cao</span></h3>
+            
+            <div class="sensitivity-group">
+                <div class="slider-item">
+                    <div class="slider-label"><span>👁️ Nhìn Xung Quanh (Quay camera)</span> <span id="valGeneral" class="val-num">0</span></div>
+                    <div class="range-container">
+                        <input type="range" id="sensGeneral" min="0" max="100" value="0">
+                    </div>
+                </div>
+                <div class="slider-item">
+                    <div class="slider-label"><span>🔴 Red Dot / Ống Ngắm Chuẩn</span> <span id="valRedDot" class="val-num">0</span></div>
+                    <div class="range-container">
+                        <input type="range" id="sensRedDot" min="0" max="100" value="0">
+                    </div>
+                </div>
+                <div class="slider-item">
+                    <div class="slider-label"><span>🔍 Ống Ngắm 2x (Zoom 2x)</span> <span id="val2x" class="val-num">0</span></div>
+                    <div class="range-container">
+                        <input type="range" id="sens2x" min="0" max="100" value="0">
+                    </div>
+                </div>
+                <div class="slider-item">
+                    <div class="slider-label"><span>🔭 Ống Ngắm 4x (Zoom 4x)</span> <span id="val4x" class="val-num">0</span></div>
+                    <div class="range-container">
+                        <input type="range" id="sens4x" min="0" max="100" value="0">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Công cụ tối ưu phụ trợ -->
+        <section class="card grid-2x2">
+            <div class="tool-item active-tool">🎯 Tối Ưu Touch</div>
+            <div class="tool-item active-tool">⚡ Giảm Giật Lag</div>
+            <div class="tool-item active-tool">⚙️ Tăng Chính Xác</div>
+            <div class="tool-item active-tool">🔋 Tối Ưu Pin</div>
+        </section>
+
+        <!-- Thống kê & Xem trước mô phỏng giống hệt ảnh mẫu -->
+        <div class="flex-row">
+            <section class="card flex-1">
+                <h4>THỐNG KÊ</h4>
+                <p class="stat-line"><span class="text-green">87% ↑</span> Tỷ lệ Headshot</p>
+                <p class="stat-line"><span class="text-green">99%</span> Độ ổn định tâm</p>
+            </section>
+            <section class="card flex-1 preview-box">
+                <h4>XEM TRƯỚC</h4>
+                <div class="game-mockup">
+                    <div class="aim-dot"></div>
+                </div>
+            </section>
         </div>
 
+        <!-- Nút bấm hành động chính -->
+        <div class="action-buttons">
+            <button id="btnApply" class="btn-primary">🚀 ÁP DỤNG ĐỘ NHẠY HỆ THỐNG</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
