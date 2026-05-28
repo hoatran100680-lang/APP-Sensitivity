@@ -1,117 +1,148 @@
-const BACKEND_API = "http://localhost:5000/api/check-key";
+// Thay IP localhost thành IP VPS/Máy chủ của bạn khi treo online
+const API_URL = "http://127.0.0.1:8000";
 
-// Bộ thông số độ nhạy mặc định cho từng đời máy (Tối đa 200)
+// Dữ liệu cấu hình độ nhạy riêng biệt cho từng dòng máy từ iPhone 7 đến iPhone 17
 const deviceDatabase = {
-    "ip7":  { s1: 190, s2: 185, s3: 175, s4: 170, s5: 160, s6: 180 },
-    "ip8":  { s1: 180, s2: 175, s3: 165, s4: 160, s5: 150, s6: 170 },
-    "ipX":  { s1: 160, s2: 155, s3: 145, s4: 140, s5: 130, s6: 150 },
-    "ip11": { s1: 140, s2: 135, s3: 125, s4: 120, s5: 110, s6: 130 },
-    "ip12": { s1: 120, s2: 115, s3: 105, s4: 100, s5: 90,  s6: 110 },
-    "ip13": { s1: 100, s2: 92,  s3: 85,  s4: 75,  s5: 65,  s6: 90  }, // Mẫu mặc định giống ảnh
-    "ip14": { s1: 95,  s2: 88,  s3: 80,  s4: 70,  s5: 60,  s6: 85  },
-    "ip15": { s1: 90,  s2: 82,  s3: 75,  s4: 65,  s5: 55,  s6: 80  },
-    "ip16": { s1: 85,  s2: 78,  s3: 70,  s4: 60,  s5: 50,  s6: 75  },
-    "ip17": { s1: 80,  s2: 72,  s3: 65,  s4: 55,  s5: 45,  s6: 70  }
+    "iPhone 7/8":       { look: 80,  red: 70, x2: 65, x4: 55, awm: 45, free: 75 },
+    "iPhone 7+/8+":     { look: 82,  red: 72, x2: 68, x4: 58, awm: 48, free: 78 },
+    "iPhone X/XR":      { look: 88,  red: 78, x2: 72, x4: 62, awm: 52, free: 82 },
+    "iPhone XS/XS Max": { look: 90,  red: 80, x2: 75, x4: 65, awm: 55, free: 85 },
+    "iPhone 11 Series": { look: 92,  red: 84, x2: 78, x4: 68, awm: 58, free: 88 },
+    "iPhone 12 Pro":    { look: 94,  red: 86, x2: 80, x4: 70, awm: 60, free: 90 },
+    "iPhone 13 Pro":    { look: 100, red: 92, x2: 85, x4: 75, awm: 65, free: 90 }, // Khớp 100% hình mẫu
+    "iPhone 14 Pro":    { look: 100, red: 94, x2: 88, x4: 78, awm: 68, free: 92 },
+    "iPhone 15 Pro":    { look: 100, red: 96, x2: 90, x4: 80, awm: 70, free: 94 },
+    "iPhone 16 Pro":    { look: 100, red: 98, x2: 92, x4: 82, awm: 72, free: 96 },
+    "iPhone 17 Pro":    { look: 100, red: 100,x2: 95, x4: 85, awm: 75, free: 98 }
 };
 
-let mainCountdown;
+const sliderConfigs = [
+    { id: "look", label: "Nhìn Xung Quanh", sub: "Quay camera" },
+    { id: "red",  label: "Red Dot / Ống Ngắm", sub: "Ngắm tâm chuẩn" },
+    { id: "x2",   label: "Ống Ngắm 2x", sub: "Zoom 2x" },
+    { id: "x4",   label: "Ống Ngắm 4x", sub: "Zoom 4x" },
+    { id: "awm",  label: "Ống Ngắm AWM", sub: "Sniper tối ưu" },
+    { id: "free", label: "Nhìn Tự Do", sub: "Quan sát tự do" }
+];
 
-function verifyKey() {
-    let keyFieldValue = document.getElementById("key-input").value.trim();
-    if(!keyFieldValue) return alert("Vui lòng điền mã Key!");
+let syncInterval = null;
+let remainingSeconds = 0;
+let isVinhVien = false;
 
-    fetch(BACKEND_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key_code: keyFieldValue })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if(data.status === "success") {
-            localStorage.setItem("current_user_key", keyFieldValue);
-            localStorage.setItem("current_user_expiry", data.expiry);
-            alert("🎉 Kích hoạt trực tuyến thành công!");
-            openMenuDashboard(data.expiry);
-        } else {
-            alert("❌ Lỗi: " + data.message);
-        }
-    })
-    .catch(() => alert("❌ Thất bại: Không thể liên kết tới Server Python!"));
-}
-
-function openMenuDashboard(expiryTimestamp) {
-    document.getElementById("lock-screen").style.display = "none";
-    document.getElementById("main-menu").style.display = "block";
-    updateSensitivity();
-
-    clearInterval(mainCountdown);
-    
-    // Hệ thống kiểm tra realtime mỗi giây, hết hạn tự động ĐÁ RA LẬP TỨC
-    mainCountdown = setInterval(function() {
-        let remainderTime = expiryTimestamp - Date.now();
-
-        if(remainderTime <= 0) {
-            clearInterval(mainCountdown);
-            alert("⏰ ĐÃ HẾT HẠN DÙNG! Hệ thống tự động đá ra ngoài màn hình khóa.");
-            logoutKey();
-        } else {
-            let seconds = Math.floor(remainderTime / 1000);
-            let d = Math.floor(seconds / 86400);
-            let h = Math.floor((seconds % 86400) / 3600);
-            let m = Math.floor((seconds % 3600) / 60);
-            let s = seconds % 60;
-
-            let timeString = `${d}d - ${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-            if (d > 365) timeString = "VĨNH VIỄN (VIP)";
-            
-            document.getElementById("key-time-display").innerText = "THỜI GIAN CÒN LẠI: " + timeString;
-        }
-    }, 1000);
-}
-
-// Chức năng nút Test nhanh 10 giây không cần mở Server/Discord
-function runKickTest() {
-    alert("🧪 Bắt đầu chế độ test nhanh: Menu sẽ mở và tự động ĐÁ bạn ra sau 10 giây nữa!");
-    let testExpiry = Date.now() + (10 * 1000);
-    localStorage.setItem("current_user_key", "MÃ-TEST-ẢO-10S");
-    localStorage.setItem("current_user_expiry", testExpiry);
-    openMenuDashboard(testExpiry);
-}
-
-function logoutKey() {
-    clearInterval(mainCountdown);
-    localStorage.removeItem("current_user_key");
-    localStorage.removeItem("current_user_expiry");
-    document.getElementById("main-menu").style.display = "none";
-    document.getElementById("lock-screen").style.display = "block";
-    document.getElementById("key-input").value = "";
-}
-
-function changeVal(slider, label) {
-    document.getElementById(label).innerText = document.getElementById(slider).value;
-}
-
-function updateSensitivity() {
-    let currentDevice = document.getElementById("device-select").value;
-    let config = deviceDatabase[currentDevice];
-    if(config) {
-        for(let i = 1; i <= 6; i++) {
-            document.getElementById(`sens${i}`).value = config[`s${i}`];
-            document.getElementById(`val${i}`).innerText = config[`s${i}`];
-        }
-    }
-}
-
-// Giữ đăng nhập khi F5 tải lại trang nếu key vẫn còn hạn
 window.onload = function() {
-    let activeKey = localStorage.getItem("current_user_key");
-    let expiry = localStorage.getItem("current_user_expiry");
-    
-    if(activeKey && expiry) {
-        if(activeKey === "MÃ-TEST-ẢO-10S" || Date.now() < parseInt(expiry)) {
-            openMenuDashboard(parseInt(expiry));
-        } else {
-            logoutKey();
-        }
-    }
+    const select = document.getElementById("device-select");
+    Object.keys(deviceDatabase).forEach(device => {
+        let opt = document.createElement("option");
+        opt.value = device; opt.innerText = device;
+        if(device === "iPhone 13 Pro") opt.selected = true;
+        select.appendChild(opt);
+    });
+    buildSliders();
+    changeDevice();
+    checkLocalSession(); 
 };
+
+function buildSliders() {
+    const container = document.getElementById("sliders-container");
+    container.innerHTML = "";
+    sliderConfigs.forEach(cfg => {
+        container.innerHTML += `
+            <div class="slider-item">
+                <div class="slider-info"><b>${cfg.label}</b><span>${cfg.sub}</span></div>
+                <div class="slider-wrapper">
+                    <input type="range" id="range-${cfg.id}" min="0" max="100" oninput="updateVal('${cfg.id}')">
+                    <button class="btn-step" onclick="step('${cfg.id}', -1)">-</button>
+                    <span class="slider-val" id="val-${cfg.id}">0</span>
+                    <button class="btn-step" onclick="step('${cfg.id}', 1)">+</button>
+                </div>
+            </div>`;
+    });
+}
+
+function updateVal(id) { document.getElementById(`val-${id}`).innerText = document.getElementById(`range-${id}`).value; }
+function step(id, amount) { 
+    let input = document.getElementById(`range-${id}`); 
+    input.value = Math.max(0, Math.min(100, parseInt(input.value) + amount)); 
+    updateVal(id); 
+}
+
+function changeDevice() {
+    let device = document.getElementById("device-select").value;
+    let data = deviceDatabase[device];
+    if(data) { sliderConfigs.forEach(cfg => { document.getElementById(`range-${cfg.id}`).value = data[cfg.id]; updateVal(cfg.id); }); }
+}
+
+function setPreset(type) {
+    document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    if(type === 'coban') { sliderConfigs.forEach(cfg => { document.getElementById(`range-${cfg.id}`).value = 50; updateVal(cfg.id); }); } else { changeDevice(); }
+}
+
+function resetSliders() { changeDevice(); }
+function applySettings() { alert("Đã áp dụng độ nhạy đám mây thành công!"); }
+
+// KÍCH HOẠT VÀ ĐỒNG BỘ VỚI SERVER API
+function verifyKey() {
+    const inputKey = document.getElementById("key-input").value.trim();
+    const msg = document.getElementById("lock-msg");
+
+    if(!inputKey) { msg.innerText = "Vui lòng nhập mã Key!"; return; }
+    msg.innerText = "🔄 Đang xác thực dữ liệu qua API...";
+
+    fetch(`${API_URL}/verify-key?key=${encodeURIComponent(inputKey)}`)
+    .then(res => { if (!res.ok) return res.json().then(e => { throw new Error(e.detail); }); return res.json(); })
+    .then(data => {
+        localStorage.setItem("aop_active_key", inputKey);
+        if (data.type === "vinhvien") { isVinhVien = true; remainingSeconds = 0; } 
+        else { isVinhVien = false; remainingSeconds = data.remaining; }
+        enterApp();
+    })
+    .catch(err => { msg.innerText = "❌ " + err.message; });
+}
+
+function enterApp() {
+    document.getElementById("lock-screen").classList.add("hidden");
+    document.getElementById("main-menu").classList.remove("hidden");
+    if (syncInterval) clearInterval(syncInterval);
+    if (isVinhVien) {
+        document.getElementById("countdown").innerText = "VĨNH VIỄN";
+        document.getElementById("countdown").style.color = "#ffd600";
+    }
+    startRealtimeSync();
+}
+
+// THEO DÕI REALTIME PHIÊN SỬ DỤNG (PING MỖI 3 GIÂY)
+function startRealtimeSync() {
+    updateClockDisplay();
+    syncInterval = setInterval(() => {
+        const activeKey = localStorage.getItem("aop_active_key");
+        if (!activeKey) { kickUserOut("Hệ thống yêu cầu đăng nhập."); return; }
+
+        fetch(`${API_URL}/verify-key?key=${encodeURIComponent(activeKey)}`)
+        .then(res => { if (!res.ok) return res.json().then(e => { throw new Error(e.detail); }); return res.json(); })
+        .then(data => { if (data.type !== "vinhvien") { remainingSeconds = data.remaining; updateClockDisplay(); } })
+        .catch(err => { kickUserOut(err.message); }); // Bị Admin xóa key hoặc hết hạn sẽ nhảy thẳng vào đây
+    }, 3000);
+}
+
+function updateClockDisplay() {
+    if (isVinhVien) return;
+    let hrs = Math.floor(remainingSeconds / 3600);
+    let mins = Math.floor((remainingSeconds % 3600) / 60);
+    let secs = remainingSeconds % 60;
+    document.getElementById("countdown").innerText = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+function kickUserOut(reason) {
+    clearInterval(syncInterval);
+    localStorage.removeItem("aop_active_key");
+    document.getElementById("main-menu").classList.add("hidden");
+    document.getElementById("lock-screen").classList.remove("hidden");
+    document.getElementById("lock-msg").innerText = `⚠️ Thiết bị đã bị đá: ${reason}`;
+    alert(`Thông báo: ${reason}`);
+}
+
+function checkLocalSession() {
+    const activeKey = localStorage.getItem("aop_active_key");
+    if (activeKey) { document.getElementById("key-input").value = activeKey; verifyKey(); }
+}
