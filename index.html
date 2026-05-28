@@ -2,126 +2,104 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AOP ĐỘ NHẠY - PRO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AOP ĐỘ NHẠY - PRO MENU ONLINE</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cloudflare.com">
 </head>
 <body>
 
-    <!-- Màn hình chào khi vào ứng dụng (Splash Screen) -->
-    <div id="welcome-screen">
-        <div class="welcome-content">
-            <i class="fa-solid fa-crosshairs logo-icon"></i>
-            <h2>AOP ĐỘ NHẠY</h2>
-            <p>NÂNG CẤP • TỐI ƯU • CHIẾN THẮNG</p>
-            <div class="loader"></div>
+    <!-- ================= MÀN HÌNH KHÓA KEY ================= -->
+    <div id="lock-screen" class="lock-container">
+        <div class="lock-header">
+            <h2>🔑 KÍCH HOẠT HỆ THỐNG</h2>
+            <p>Vui lòng nhập mã Key được cấp từ Bot Discord</p>
+        </div>
+        <div class="input-group">
+            <input type="text" id="key-input" placeholder="Nhập mã Key (Ví dụ: AOP-1-XXXX)..." autocomplete="off">
+            <button class="btn-login" onclick="verifyKey()">KÍCH HOẠT HỆ THỐNG</button>
+            
+            <!-- NÚT BẤM THỬ NGHIỆM ĐÁ KHỎI APP NHANH TRONG 10 GIÂY -->
+            <button class="btn-test" onclick="runKickTest()">🧪 TEST ĐÁ KHỎI APP (10 GIÂY)</button>
         </div>
     </div>
 
-    <!-- Màn hình khóa yêu cầu kích hoạt mã Key -->
-    <div id="auth-container">
-        <div class="auth-card">
-            <div class="lock-icon"><i class="fa-solid fa-shield-halved"></i></div>
-            <h3>KÍCH HOẠT HỆ THỐNG</h3>
-            <p>Vui lòng nhập Key kích hoạt để sử dụng tính năng PRO</p>
-            <input type="text" id="key-input" placeholder="Nhập mã Key của bạn tại đây...">
-            <button class="btn-auth" onclick="verifyKey()">XÁC NHẬN KÍCH HOẠT</button>
-            <div class="contact-buy">Chưa có key? Vui lòng lấy key tại Bot Discord.</div>
+    <!-- ================= GIAO DIỆN MENU CHÍNH (MẶC ĐỊNH ẨN) ================= -->
+    <div id="main-menu" class="menu-container" style="display: none;">
+        
+        <!-- Header -->
+        <div class="header">
+            <h2>AOP ĐỘ NHẠY <span class="badge-led">PRO</span></h2>
+            <p class="subtitle">NÂNG CẤP • TỐI ƯU • CHIẾN THẮNG</p>
         </div>
-    </div>
 
-    <!-- Giao diện Menu chính của ứng dụng -->
-    <div id="app-container" class="hidden">
-        <header>
-            <div class="app-title">
-                <i class="fa-solid fa-crosshairs target-top"></i>
-                <div>
-                    <h1>AOP ĐỘ NHẠY</h1>
-                    <span>NÂNG CẤP • TỐI ƯU • CHIẾN THẮNG</span>
-                </div>
-            </div>
-            <div class="badge-pro">👑 PRO VIP</div>
-        </header>
+        <!-- Thanh trạng thái đồng bộ -->
+        <div class="status-bar">
+            <div>NỀN TẢNG: <span class="led-text-cyan">iOS</span></div>
+            <div id="key-time-display" class="led-text-green">THỜI GIAN CÒN LẠI: --:--:--</div>
+        </div>
 
-        <main>
-            <!-- Lựa chọn Nền tảng & Game -->
-            <div class="row-flex">
-                <div class="card half">
-                    <h3>CHỌN NỀN TẢNG</h3>
-                    <div class="btn-group platform-group">
-                        <button class="active" onclick="selectPlatform('ios')"><i class="fa-brands fa-apple"></i> iOS</button>
-                        <button onclick="selectPlatform('android')"><i class="fa-brands fa-android"></i> Android</button>
-                    </div>
-                </div>
-                <div class="card half">
-                    <h3>CHỌN GAME</h3>
-                    <div class="btn-group game-group">
-                        <button class="active" onclick="selectGame('freefire')"><i class="fa-solid fa-fire"></i> Free Fire</button>
-                        <button onclick="selectGame('ffmax')"><i class="fa-solid fa-gem"></i> FF MAX</button>
-                    </div>
-                </div>
-            </div>
+        <!-- Chọn Thiết Bị (iPhone 7 đến 17) -->
+        <div class="section-box">
+            <span class="section-title">THIẾT BỊ ĐIỆN THOẠI</span>
+            <select id="device-select" onchange="updateSensitivity()">
+                <option value="ip7">iPhone 7 / 7 Plus</option>
+                <option value="ip8">iPhone 8 / 8 Plus</option>
+                <option value="ipX">iPhone X / XS / XR</option>
+                <option value="ip11">iPhone 11 Pro Max</option>
+                <option value="ip12">iPhone 12 Pro Max</option>
+                <option value="ip13" selected>iPhone 13 Pro Max</option>
+                <option value="ip14">iPhone 14 Pro Max</option>
+                <option value="ip15">iPhone 15 Pro Max</option>
+                <option value="ip16">iPhone 16 Pro Max</option>
+                <option value="ip17">iPhone 17 Pro Max</option>
+            </select>
+        </div>
 
-            <!-- Lựa chọn thiết bị & Bộ đếm thời gian VIP -->
-            <div class="row-flex">
-                <div class="card half">
-                    <h3>THIẾT BỊ (IPHONE 7 - 17)</h3>
-                    <div class="select-wrapper">
-                        <select id="device-select" onchange="changeDeviceSettings()">
-                            <optgroup label="iPhone Đời Cũ">
-                                <option value="ip7">iPhone 7 / 7 Plus</option>
-                                <option value="ip8">iPhone 8 / 8 Plus</option>
-                                <option value="ipX">iPhone X / XR / XS Max</option>
-                            </optgroup>
-                            <optgroup label="iPhone Đời Trung">
-                                <option value="ip11">iPhone 11 Pro Max</option>
-                                <option value="ip12">iPhone 12 Pro Max</option>
-                                <option value="ip13" selected>iPhone 13 Pro Max</option>
-                            </optgroup>
-                            <optgroup label="iPhone Đời Mới">
-                                <option value="ip14">iPhone 14 Pro Max</option>
-                                <option value="ip15">iPhone 15 Pro Max</option>
-                                <option value="ip16">iPhone 16 Pro Max</option>
-                                <option value="ip17">iPhone 17 Pro Max</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                </div>
-                <div class="card half info-vip">
-                    <div class="vip-title">THỜI GIAN CÒN LẠI</div>
-                    <div class="time-countdown" id="vip-time">00:00:00</div>
-                </div>
+        <!-- Thanh điều chỉnh thông số độ nhạy (Tối đa 200) -->
+        <div class="section-box">
+            <span class="section-title">ĐIỀU CHỈNH ĐỘ NHẠY</span>
+            
+            <div class="slider-row">
+                <div class="slider-info"><span>Nhìn Xung Quanh</span><span id="val1" class="led-text-cyan">100</span></div>
+                <input type="range" id="sens1" min="0" max="200" value="100" oninput="changeVal('sens1', 'val1')">
             </div>
 
-            <!-- Bảng kéo chỉnh thông số Độ nhạy tối đa lên 200 -->
-            <div class="card sensitivity-panel">
-                <h3>ĐIỀU CHỈNH ĐỘ NHẠY <i class="fa-solid fa-circle-question help-icon"></i></h3>
-                
-                <div class="slider-group">
-                    <label>Nhìn Xung Quanh <span id="val-general">100</span></label>
-                    <input type="range" id="slide-general" min="0" max="200" value="100">
-                </div>
-
-                <div class="slider-group">
-                    <label>Red Dot / Ống Ngắm <span id="val-reddot">92</span></label>
-                    <input type="range" id="slide-reddot" min="0" max="200" value="92">
-                </div>
-
-                <div class="slider-group">
-                    <label>Ống Ngắm 2x <span id="val-x2">85</span></label>
-                    <input type="range" id="slide-x2" min="0" max="200" value="85">
-                </div>
-
-                <div class="slider-group">
-                    <label>Ống Ngắm 4x <span id="val-x4">75</span></label>
-                    <input type="range" id="slide-x4" min="0" max="200" value="75">
-                </div>
+            <div class="slider-row">
+                <div class="slider-info"><span>Red Dot / Ống Ngắm Chuẩn</span><span id="val2" class="led-text-cyan">92</span></div>
+                <input type="range" id="sens2" min="0" max="200" value="92" oninput="changeVal('sens2', 'val2')">
             </div>
 
-            <!-- Nút áp dụng và kích hoạt Deep Link -->
-            <button class="btn-apply" onclick="applySettings()">🚀 ÁP DỤNG ĐỘ NHẠY</button>
-        </main>
+            <div class="slider-row">
+                <div class="slider-info"><span>Ống Ngắm 2x</span><span id="val3" class="led-text-cyan">85</span></div>
+                <input type="range" id="sens3" min="0" max="200" value="85" oninput="changeVal('sens3', 'val3')">
+            </div>
+
+            <div class="slider-row">
+                <div class="slider-info"><span>Ống Ngắm 4x</span><span id="val4" class="led-text-cyan">75</span></div>
+                <input type="range" id="sens4" min="0" max="200" value="75" oninput="changeVal('sens4', 'val4')">
+            </div>
+
+            <div class="slider-row">
+                <div class="slider-info"><span>Ống Ngắm AWM (Sniper)</span><span id="val5" class="led-text-cyan">65</span></div>
+                <input type="range" id="sens5" min="0" max="200" value="65" oninput="changeVal('sens5', 'val5')">
+            </div>
+
+            <div class="slider-row">
+                <div class="slider-info"><span>Nhìn Tự Do</span><span id="val6" class="led-text-cyan">90</span></div>
+                <input type="range" id="sens6" min="0" max="200" value="90" oninput="changeVal('sens6', 'val6')">
+            </div>
+        </div>
+
+        <!-- Tính năng phụ tối ưu -->
+        <div class="features-grid">
+            <div class="feat-item">🎯 Tối Ưu Touch</div>
+            <div class="feat-item">⚡ Giảm Giật Lag</div>
+            <div class="feat-item">🔥 Tăng Chính Xác</div>
+            <div class="feat-item">🔋 Tối Ưu Pin</div>
+        </div>
+
+        <button class="btn-main-apply" onclick="alert('⚡ Đã áp dụng thông số cấu hình tối ưu thành công!')">ÁP DỤNG ĐỘ NHẠY ONLINE</button>
+        <button class="btn-main-logout" onclick="logoutKey()">ĐĂNG XUẤT KEY</button>
     </div>
 
     <script src="script.js"></script>
